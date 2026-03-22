@@ -39,31 +39,33 @@
     <button onclick="generarIframe()">Generar</button>
     <label>Código Moodle:</label> <textarea id="resultado" readonly></textarea>
 </div>
-
 <script>
     function toggleCampos() {
         const tipo = document.getElementById('tipo').value;
         document.getElementById('campos-video').classList.toggle('hidden', tipo !== 'video');
         document.getElementById('campos-src').classList.toggle('hidden', tipo === 'video');
     }
+
     function generarIframe() {
-        const modo = document.getElementById('modo-seguimiento').value; 
-        const tipo = document.getElementById('tipo-recurso').value; 
+        const baseUrl = document.getElementById('baseUrl').value; 
+        const tipo = document.getElementById('tipo').value; 
         
-        let urlBase = `https://uninunez-media.github.io/ingenio-dua-player/${modo}.html`;
-        let urlFinal = `${urlBase}?tipo=${tipo}`;
+        let urlFinal = `${baseUrl}?tipo=${tipo}`;
         
         if (tipo === 'video') {
             const yt = document.getElementById('yt').value.trim();
             const sign = document.getElementById('sign').value.trim();
             const vtt = document.getElementById('vtt_es').value.trim();
-            if (yt) url += `&yt=${yt}`; if (sign) url += `&sign=${sign}`; if (vtt) url += `&vtt_es=${encodeURIComponent(vtt)}`;
+            
+            if (yt) urlFinal += `&yt=${yt}`; 
+            if (sign) urlFinal += `&sign=${sign}`; 
+            if (vtt) urlFinal += `&vtt_es=${encodeURIComponent(vtt)}`;
         } else {
             let src = document.getElementById('src').value.trim();
             if (tipo === 'pagina' && src && !src.includes('inpopup=1')) {
                 src += (src.includes('?') ? '%26' : '?') + 'inpopup=1';
             }
-            if (src) url += `&src=${src}`;
+            if (src) urlFinal += `&src=${encodeURIComponent(src)}`;
         }
 
         document.getElementById('resultado').value = `<iframe id="iframe-reproductor" src="${urlFinal}" width="100%" height="600px" style="border:none; border-radius:8px; background:#fff;" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
