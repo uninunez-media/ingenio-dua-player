@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor Accesible DUA</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+    <link rel="stylesheet" href="https://ableplayer.github.io/ableplayer/build/ableplayer.min.css">
+    <script src="https://ableplayer.github.io/ableplayer/build/ableplayer.dist.js"></script>
+
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+        #dua-container { width: 100%; height: 100vh; position: relative; }
+        .visor-recurso { width: 100%; height: 100%; border: none; background: #fff; }
+
+        /* Perfiles DUA Dinámicos */
+        body.perfil-lectura .able-media-container, 
+        body.perfil-lectura .able-sign-window { display: none !important; }
+        body.perfil-lectura .able-transcript-area { position: absolute !important; top:0 !important; left:0 !important; width: 100% !important; height: 100vh !important; z-index: 1000; }
+
+        body.perfil-escucha .able-sign-window,
+        body.perfil-escucha #player video { opacity: 0 !important; pointer-events: none; } 
+        body.perfil-escucha .visor-recurso { filter: contrast(1.5) grayscale(1); }
+
+        body.perfil-audiovisual .able-sign-window { display: block !important; width: 30% !important; z-index: 9999; }
+    </style>
+</head>
+<body>
+    <div id="dua-container"></div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const container = document.getElementById('dua-container');
+        const tipo = params.get('tipo') || 'video';
+
+        function initRouter() {
+            if (tipo === 'pdf' || tipo === 'pagina') {
+                renderIframeResource();
+            } else {
+                renderVideoPlayer();
+            }
+            setupPostMessageListener();
+        }
+
+        function renderIframeResource() {
+            const src = params.get('src');
+            if (!src) { container.innerHTML = '<p style="color:white; padding:20px;">Falta la URL del recurso (src).</p>'; return; }
+            container.innerHTML = `<iframe class="visor-recurso" src="${src}" allowfullscreen></iframe>`;
+        }
+
+        function renderVideoPlayer() {
+            const ytId = params.get('yt');
+            const signId = params.get('sign');
+            
+            let videoHTML = `<video id="video1" preload="auto" playsinline `;
+            if (ytId) videoHTML += `data-youtube-id="${ytId}" `;
+            if (signId) videoHTML += `data-youtube-sign-src="${signId}" `;
+            videoHTML += `></video>`;
+            
+            container.innerHTML = `<div id="player">${videoHTML}</div>`;
+            const videoEl = document.getElementById('video1');
+
+            for (const [key, value] of params.entries()) {
+                if (key.startsWith('vtt_')) {
+                    const lang = key.split('_')[1];
+                    const track = document.createElement('track');
+                    track.kind = "captions"; track.src = value; track.srclang = lang; track.label = lang.toUpperCase();
+                    if (lang === 'es') track.default = true;
+                    videoEl.appendChild(track);
+                }
+            }
+
+            $(document).ready(function() { new AblePlayer($('#video1')); });
+        }
+
+        function setupPostMessageListener() {
+            window.addEventListener('message', (event) => {
+                const data = event.data;
+                if (data && data.accion === 'cambioDUA') {
+                    document.body.className = ''; 
+                    if (data.perfil !== 'estandar') document.body.classList.add(`perfil-${data.perfil}`);
+                }
+            });
+        }
+
+        initRouter();
+    </script>
+</body>
+</html>
