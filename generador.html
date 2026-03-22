@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generador DUA</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 1rem; background: #f4f4f4; }
+        .card { background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        label { display: block; margin-top: 1rem; font-weight: bold; font-size: 0.9rem; }
+        input, select, textarea { width: 100%; padding: 0.5rem; margin-top: 0.2rem; box-sizing: border-box; }
+        .hidden { display: none; }
+        button { margin-top: 1.5rem; width: 100%; padding: 0.75rem; background: #0056b3; color: white; border: none; cursor: pointer; }
+        textarea { height: 120px; font-family: monospace; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Generador de Iframe DUA</h2>
+    <label>URL Base de GitHub Pages:</label>
+    <input type="text" id="baseUrl" value="https://uninunez-media.github.io/ingenio-dua-player/dua-lite.html">
+
+    <label>Tipo de Recurso:</label>
+    <select id="tipo" onchange="toggleCampos()">
+        <option value="video">Video AblePlayer</option>
+        <option value="pdf">Documento PDF</option>
+        <option value="pagina">Recurso de Moodle</option>
+    </select>
+
+    <div id="campos-video">
+        <label>ID YouTube Principal:</label> <input type="text" id="yt">
+        <label>ID YouTube Señas:</label> <input type="text" id="sign">
+        <label>URL .vtt Español:</label> <input type="text" id="vtt_es">
+    </div>
+
+    <div id="campos-src" class="hidden">
+        <label>URL del Recurso:</label> <input type="text" id="src">
+    </div>
+
+    <button onclick="generarIframe()">Generar</button>
+    <label>Código Moodle:</label> <textarea id="resultado" readonly></textarea>
+</div>
+
+<script>
+    function toggleCampos() {
+        const tipo = document.getElementById('tipo').value;
+        document.getElementById('campos-video').classList.toggle('hidden', tipo !== 'video');
+        document.getElementById('campos-src').classList.toggle('hidden', tipo === 'video');
+    }
+    function generarIframe() {
+        const tipo = document.getElementById('tipo').value;
+        let url = `${document.getElementById('baseUrl').value}?tipo=${tipo}`;
+        
+        if (tipo === 'video') {
+            const yt = document.getElementById('yt').value.trim();
+            const sign = document.getElementById('sign').value.trim();
+            const vtt = document.getElementById('vtt_es').value.trim();
+            if (yt) url += `&yt=${yt}`; if (sign) url += `&sign=${sign}`; if (vtt) url += `&vtt_es=${encodeURIComponent(vtt)}`;
+        } else {
+            let src = document.getElementById('src').value.trim();
+            if (tipo === 'pagina' && src && !src.includes('inpopup=1')) {
+                src += (src.includes('?') ? '%26' : '?') + 'inpopup=1';
+            }
+            if (src) url += `&src=${src}`;
+        }
+        document.getElementById('resultado').value = `<iframe id="iframe-reproductor" src="${url}" width="100%" height="600px" style="border:none; border-radius:8px; background:#fff;" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+    }
+</script>
+</body>
+</html>
