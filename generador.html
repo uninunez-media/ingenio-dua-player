@@ -262,18 +262,23 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (vista === 'lectura') {
                 if (textoInput.startsWith('http')) {
                     previewContent.innerHTML = `
-                        <div class="w-full h-full bg-white rounded-lg border flex flex-col overflow-hidden">
-                            <div class="p-3 bg-blue-50 text-blue-800 text-xs text-center border-b flex justify-between items-center">
-                                <span>¿El documento aparece en blanco por seguridad del servidor?</span>
-                                <a href="${textoInput}" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded font-bold hover:bg-blue-700">Abrir en nueva pestaña</a>
+                        <div class="w-full bg-white rounded-lg border flex flex-col overflow-hidden">
+                            <div class="p-3 bg-blue-50 text-blue-900 text-sm border-b flex justify-between items-center" role="alert">
+                                <span class="flex items-center gap-2 font-medium">
+                                    <span class="material-symbols-outlined">accessibility_new</span> 
+                                    ¿Usas lector de pantalla? Abre el documento directamente.
+                                </span>
+                                <a href="${textoInput}" target="_blank" aria-label="Abrir documento en nueva pestaña" class="bg-blue-600 text-white px-4 py-1.5 rounded font-bold hover:bg-blue-700 transition-colors">Abrir Documento</a>
                             </div>
-                            <iframe src="${textoInput}" width="100%" height="450px" frameborder="0" class="flex-1"></iframe>
+                            <object data="${textoInput}" type="application/pdf" width="100%" style="height: 70vh; min-height: 600px;" title="Documento de lectura">
+                                <iframe src="${textoInput}" width="100%" style="height: 70vh; min-height: 600px;" title="Documento de lectura" aria-label="Documento PDF incrustado"></iframe>
+                            </object>
                         </div>`;
                 } else {
                     previewContent.innerHTML = `
-                        <div class="bg-white p-6 rounded border h-full overflow-y-auto">
-                            <h2 class="text-xl font-bold mb-4 text-primary">Vista de Lectura</h2>
-                            <p class="text-gray-800 leading-relaxed whitespace-pre-wrap">${textoInput || 'No hay contenido de texto definido.'}</p>
+                        <div class="bg-white p-8 rounded border h-full overflow-y-auto" tabindex="0" aria-label="Contenido de texto accesible">
+                            <h2 class="text-2xl font-bold mb-4 text-primary">Contenido de Lectura</h2>
+                            <p class="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">${textoInput || 'No hay contenido de texto definido.'}</p>
                         </div>`;
                 }
             }
