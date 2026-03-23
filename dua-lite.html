@@ -236,7 +236,7 @@
                 if (isYouTube && !audioSrc) {
                     mediaElement = document.createElement('video');
                     mediaElement.setAttribute('data-youtube-id', videoId);
-                    mediaElement.setAttribute('data-youtube-nocookie', 'true');
+                    //mediaElement.setAttribute('data-youtube-nocookie', 'true');
                 } else if (fallbackSrc) {
                     mediaElement = document.createElement('audio');
                     const source = document.createElement('source');
@@ -268,7 +268,7 @@
                 if (videoId) {
                     if (isYouTube) {
                         mediaElement.setAttribute('data-youtube-id', videoId);
-                        mediaElement.setAttribute('data-youtube-nocookie', 'true');
+                        //mediaElement.setAttribute('data-youtube-nocookie', 'true');
                     } else {
                         mediaElement.src = videoId;
                     }
