@@ -193,8 +193,31 @@
             });
         }
 
-        // LÓGICA DE CONSTRUCCIÓN DINÁMICA
+// LÓGICA DE CONSTRUCCIÓN DINÁMICA
         function init() {
+            // --- NUEVO: VALIDACIÓN DE EXISTENCIA DE RECURSOS ---
+            function mostrarMensajeVacio(mensaje, icono) {
+                document.body.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f8f9fa; font-family: sans-serif; text-align: center; padding: 20px; box-sizing: border-box;">
+                        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; max-width: 400px;">
+                            <span style="font-size: 48px; display: block; margin-bottom: 15px;">${icono}</span>
+                            <h3 style="margin: 0 0 10px 0; color: #1f2937; font-size: 18px;">Perfil no disponible</h3>
+                            <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">${mensaje}</p>
+                        </div>
+                    </div>`;
+            }
+
+            if (perfilActivo === 'audiovisual' && !videoId) {
+                mostrarMensajeVacio("El docente no ha incluido un video principal para este recurso.", "🎬");
+                return; // Detiene la ejecución, no carga AblePlayer
+            }
+
+            if (perfilActivo === 'escucha' && !audioSrc && !videoId) {
+                mostrarMensajeVacio("El docente no ha incluido una versión en audio para este recurso.", "🎧");
+                return; // Detiene la ejecución
+            }
+            // --- FIN NUEVO ---
+
             let mediaElement;
             const elementId = 'media-recurso';
 
