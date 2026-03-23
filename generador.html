@@ -260,37 +260,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 previewContent.innerHTML = `<iframe src="${urlAudio.href}" width="100%" height="450px" frameborder="0" allowfullscreen></iframe>`;
             }
             else if (vista === 'lectura') {
-                if (textoInput.startsWith('http')) {
+                if (!textoInput) {
+                    previewContent.innerHTML = `
+                        <div class="flex-1 flex flex-col items-center justify-center p-6 text-center h-full bg-white rounded-lg border">
+                            <span class="material-symbols-outlined text-5xl text-gray-300 mb-4">auto_stories</span>
+                            <h3 class="text-lg font-bold text-gray-700">Perfil no disponible</h3>
+                            <p class="text-sm text-gray-500 max-w-sm mt-2">No se ha ingresado un documento o texto base para la vista de lectura.</p>
+                        </div>`;
+                }
+                else if (textoInput.startsWith('http')) {
                     previewContent.innerHTML = `
                         <div class="w-full bg-white rounded-lg border flex flex-col overflow-hidden">
                             <div class="p-3 bg-blue-50 text-blue-900 text-sm border-b flex justify-between items-center" role="alert">
                                 <span class="flex items-center gap-2 font-medium">
                                     <span class="material-symbols-outlined">accessibility_new</span> 
-                                    ¿Usas lector de pantalla? Abre el documento directamente.
+                                    ¿Usas lector de pantalla?
                                 </span>
                                 <a href="${textoInput}" target="_blank" aria-label="Abrir documento en nueva pestaña" class="bg-blue-600 text-white px-4 py-1.5 rounded font-bold hover:bg-blue-700 transition-colors">Abrir Documento</a>
                             </div>
                             <object data="${textoInput}" type="application/pdf" width="100%" style="height: 70vh; min-height: 600px;" title="Documento de lectura">
-                                <iframe src="${textoInput}" width="100%" style="height: 70vh; min-height: 600px;" title="Documento de lectura" aria-label="Documento PDF incrustado"></iframe>
+                                <iframe src="${textoInput}" width="100%" style="height: 70vh; min-height: 600px;" title="Documento de lectura"></iframe>
                             </object>
                         </div>`;
                 } else {
                     previewContent.innerHTML = `
-                        <div class="bg-white p-8 rounded border h-full overflow-y-auto" tabindex="0" aria-label="Contenido de texto accesible">
+                        <div class="bg-white p-8 rounded border h-full overflow-y-auto" tabindex="0">
                             <h2 class="text-2xl font-bold mb-4 text-primary">Contenido de Lectura</h2>
-                            <p class="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">${textoInput || 'No hay contenido de texto definido.'}</p>
+                            <p class="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">${textoInput}</p>
                         </div>`;
                 }
             }
             else if (vista === 'bajoconsumo') {
-                previewContent.innerHTML = `
-                    <div class="bg-orange-50 border border-orange-200 p-4 rounded mb-4 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-orange-500">warning</span>
-                        <p class="text-xs font-bold text-orange-800">Modo ahorro de datos activo</p>
-                    </div>
-                    <div class="bg-white p-4 rounded border flex-1 text-gray-500 text-sm overflow-y-auto">
-                        <p>${textoInput ? textoInput.substring(0, 500) + '...' : 'Cargando versión ligera de texto educativo...'}</p>
-                    </div>`;
+                if (!textoInput) {
+                    previewContent.innerHTML = `
+                        <div class="flex-1 flex flex-col items-center justify-center p-6 text-center h-full bg-white rounded-lg border">
+                            <span class="material-symbols-outlined text-5xl text-gray-300 mb-4">bolt</span>
+                            <h3 class="text-lg font-bold text-gray-700">Perfil no disponible</h3>
+                            <p class="text-sm text-gray-500 max-w-sm mt-2">No se ha ingresado texto para generar la versión de bajo consumo.</p>
+                        </div>`;
+                } else {
+                    previewContent.innerHTML = `
+                        <div class="bg-orange-50 border border-orange-200 p-4 rounded mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-orange-500">warning</span>
+                            <p class="text-xs font-bold text-orange-800">Modo ahorro de datos activo</p>
+                        </div>
+                        <div class="bg-white p-4 rounded border flex-1 text-gray-500 text-sm overflow-y-auto">
+                            <p>${textoInput}</p>
+                        </div>`;
+                }
             }
         };
     });
