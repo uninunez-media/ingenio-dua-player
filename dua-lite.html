@@ -171,8 +171,7 @@
 
     <div id="wrapper">
         <div id="player">
-            <!-- El elemento multimedia (video/audio) se inyectará aquí dinámicamente -->
-        </div>
+            </div>
     </div>
 
     <script>
@@ -186,7 +185,7 @@
         const labelOverlay = document.getElementById('sign-label-overlay');
         const playerContainer = document.getElementById('player');
         
-        let isSimpleLayout = false; // Bandera para optimizar el layout y apagar el resizer
+        let isSimpleLayout = false;
 
         // FUNCIÓN DE INICIO ABLEPLAYER
         function startPlayer(elementId) {
@@ -227,7 +226,6 @@
             if (perfilActivo === 'escucha') {
                 const fallbackSrc = (!audioSrc && videoId) ? videoId : audioSrc;
 
-                // Blindaje visual: ocultar complementos innecesarios en modo audio
                 const style = document.createElement('style');
                 style.innerHTML = `
                     #player .able-media-container { display: none !important; }
@@ -276,13 +274,21 @@
                     }
                 }
 
+                const prefSena = params.get('pref_sena');
                 let signId = null;
                 let signLabelText = null;
-                for (const [key, value] of params.entries()) {
-                    if (key.startsWith('ls_') && value) {
-                        signId = value;
-                        signLabelText = key.split('_')[1].toUpperCase();
-                        break; 
+                
+                // Preferencia de señas
+                if (prefSena && params.get(`ls_${prefSena}`)) {
+                    signId = params.get(`ls_${prefSena}`);
+                    signLabelText = prefSena.toUpperCase();
+                } else {
+                    for (const [key, value] of params.entries()) {
+                        if (key.startsWith('ls_') && value) {
+                            signId = value;
+                            signLabelText = key.split('_')[1].toUpperCase();
+                            break; 
+                        }
                     }
                 }
 
@@ -317,7 +323,10 @@
                 const lang = partes[1].toLowerCase();
                 let kind = '';
 
-                if (tipo === 'sub') kind = 'captions'; 
+                // Preferencia de subtítulos
+                const prefSub = params.get('pref_sub') || 'es';
+                
+                if (tipo === 'sub') kind = 'captions';
                 else if (tipo === 'cap') kind = 'chapters';
                 else if (tipo === 'desc') kind = 'descriptions';
 
@@ -328,7 +337,7 @@
                     track.src = value;
                     track.srclang = lang;
                     track.label = getLanguageName(lang);
-                    if (tipo === 'sub' && lang === 'es') track.default = true; 
+                    if (tipo === 'sub' && lang === prefSub) track.default = true; 
                     mediaElement.appendChild(track);
                 }
             }
@@ -373,7 +382,7 @@
 
         resizerX.addEventListener('mousedown', () => { isResizingX = true; body.classList.add('is-resizing-x'); });
         document.addEventListener('mousemove', (e) => {
-            if (!isResizingX || isSimpleLayout) return; // Bloquea el cálculo si es layout simple
+            if (!isResizingX || isSimpleLayout) return; 
             let percX = (e.clientX / window.innerWidth) * 100;
             if (percX < 20) percX = 20; if (percX > 90) percX = 90;
             document.documentElement.style.setProperty('--split-x', percX + '%');
@@ -381,7 +390,6 @@
         document.addEventListener('mouseup', () => { isResizingX = false; body.classList.remove('is-resizing-x'); });
 
         function checkLayout() {
-            // Si es un diseño simple o pantalla pequeña, abortar para ahorrar recursos
             if (window.innerWidth <= 700 || isSimpleLayout) return;
 
             var signWindow = document.querySelector('.able-sign-window');
@@ -412,18 +420,6 @@
             }
         }
         setInterval(checkLayout, 500);
-        // --- RECEPTOR DE ÓRDENES DEL BLOQUE MOODLE ---
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.accion === 'cambioDUA') {
-                const urlActual = new URL(window.location.href);
-                
-                // Actualiza el perfil en la URL
-                urlActual.searchParams.set('perfil', event.data.perfil);
-                
-                // AblePlayer requiere un recargo limpio del DOM para cambiar de video a audio o viceversa sin errores
-                window.location.replace(urlActual.href);
-            }
-        });
     </script>
 </body>
 </html>
