@@ -195,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Lógica de Pestañas
+    // Lógica de Pestañas
     tabs.forEach(tab => {
         tab.onclick = (e) => {
             tabs.forEach(t => t.classList.replace('bg-primary', 'bg-transparent') || t.classList.replace('text-white', 'text-on-surface-variant'));
@@ -204,14 +205,40 @@ document.addEventListener('DOMContentLoaded', () => {
             if (previewContent.classList.contains('hidden')) return;
 
             const vista = e.currentTarget.getAttribute('data-vista');
+            const textoInput = document.getElementById('input-texto').value.trim();
+
             if (vista === 'audiovisual') {
                 previewContent.innerHTML = codigoResultado.value;
-            } else {
+            } 
+            else if (vista === 'escucha') {
+                const urlOriginal = new URL(document.getElementById('iframe-reproductor').src);
+                urlOriginal.searchParams.set('perfil', 'escucha');
+                previewContent.innerHTML = `<iframe src="${urlOriginal.href}" width="100%" height="450px" frameborder="0" allowfullscreen></iframe>`;
+            }
+            else if (vista === 'lectura') {
+                // LÓGICA PARA PDF O TEXTO
+                if (textoInput.startsWith('http')) {
+                    // Si es una URL (PDF o página), la incrustamos
+                    // Usamos Google Docs Viewer como fallback para asegurar que el PDF se vea
+                    const pdfUrl = textoInput.toLowerCase().endsWith('.pdf') 
+                        ? `https://docs.google.com/viewer?url=${encodeURIComponent(textoInput)}&embedded=true`
+                        : textoInput;
+
+                    previewContent.innerHTML = `<iframe src="${pdfUrl}" width="100%" height="450px" frameborder="0"></iframe>`;
+                } else {
+                    // Si es solo texto, usamos el diseño limpio
+                    previewContent.innerHTML = `
+                        <div class="bg-white p-6 rounded border h-full overflow-y-auto">
+                            <h2 class="text-xl font-bold mb-4">Vista de Lectura</h2>
+                            <p class="text-gray-800 leading-relaxed">${textoInput || 'No hay contenido de texto definido.'}</p>
+                        </div>`;
+                }
+            }
+            else if (vista === 'bajoconsumo') {
                 previewContent.innerHTML = mockups[vista];
             }
         };
     });
-
     // Copiar
     document.getElementById('btn-copiar').onclick = () => {
         codigoResultado.select();
