@@ -85,21 +85,18 @@
         
         <!-- Simulador Dinámico -->
         <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col border border-surface-variant">
-            <div class="bg-surface p-2 border-b border-surface-variant flex gap-1 overflow-x-auto">
-                <button id="btn-toggle-form" class="py-2 px-3 mr-2 border border-surface-variant rounded-lg text-on-surface-variant hover:bg-surface-container font-semibold text-xs transition-all flex items-center justify-center gap-1" title="Ocultar Formulario">
-                    <span class="material-symbols-outlined text-[16px]">menu_open</span>
+            <div class="bg-surface p-1.5 border-b border-surface-variant flex gap-1 overflow-x-auto">
+                <button data-vista="audiovisual" class="sim-tab flex-1 min-w-max py-1 px-2 rounded-md bg-primary text-white font-bold text-[11px] transition-all flex items-center justify-center gap-1 shadow-sm">
+                    <span class="material-symbols-outlined text-[14px]">play_circle</span> Audiovisual
                 </button>
-                <button data-vista="audiovisual" class="sim-tab flex-1 min-w-[100px] py-2 px-3 rounded-lg bg-primary text-white font-bold text-xs transition-all flex items-center justify-center gap-1">
-                    <span class="material-symbols-outlined text-[16px]">play_circle</span> Audiovisual
+                <button data-vista="lectura" class="sim-tab flex-1 min-w-max py-1 px-2 rounded-md bg-transparent text-on-surface-variant hover:bg-surface-container font-semibold text-[11px] transition-all flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">auto_stories</span> Lectura
                 </button>
-                <button data-vista="lectura" class="sim-tab flex-1 min-w-[100px] py-2 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container font-semibold text-xs transition-all flex items-center justify-center gap-1">
-                    <span class="material-symbols-outlined text-[16px]">auto_stories</span> Lectura
+                <button data-vista="escucha" class="sim-tab flex-1 min-w-max py-1 px-2 rounded-md bg-transparent text-on-surface-variant hover:bg-surface-container font-semibold text-[11px] transition-all flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">headphones</span> Escucha
                 </button>
-                <button data-vista="escucha" class="sim-tab flex-1 min-w-[100px] py-2 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container font-semibold text-xs transition-all flex items-center justify-center gap-1">
-                    <span class="material-symbols-outlined text-[16px]">headphones</span> Escucha
-                </button>
-                <button data-vista="bajoconsumo" class="sim-tab flex-1 min-w-[100px] py-2 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container font-semibold text-xs transition-all flex items-center justify-center gap-1">
-                    <span class="material-symbols-outlined text-[16px]">bolt</span> Ligero
+                <button data-vista="bajoconsumo" class="sim-tab flex-1 min-w-max py-1 px-2 rounded-md bg-transparent text-on-surface-variant hover:bg-surface-container font-semibold text-[11px] transition-all flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">bolt</span> Ligero
                 </button>
             </div>
 
@@ -234,20 +231,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('button[data-vista="audiovisual"]').click();
     };
 
-    // --- 5. LÓGICA DE LAS PESTAÑAS DEL SIMULADOR ---
+// --- LÓGICA DE LAS PESTAÑAS DEL SIMULADOR ---
     tabs.forEach(tab => {
         tab.onclick = (e) => {
-            // Estilos de botones
+            // 1. Limpiar todos los botones de forma segura
             tabs.forEach(t => {
-                t.classList.replace('bg-primary', 'bg-transparent');
-                t.classList.add('text-on-surface-variant');
-                t.classList.remove('text-white');
+                t.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+                t.classList.add('bg-transparent', 'text-on-surface-variant');
             });
-            e.currentTarget.classList.replace('bg-transparent', 'bg-primary');
-            e.currentTarget.classList.replace('text-on-surface-variant', 'text-white');
+            // 2. Aplicar color solo al botón clickeado
+            e.currentTarget.classList.remove('bg-transparent', 'text-on-surface-variant');
+            e.currentTarget.classList.add('bg-primary', 'text-white', 'shadow-sm');
 
             if (!urlGeneradaActual) return;
-
             const vista = e.currentTarget.getAttribute('data-vista');
             const textoInput = document.getElementById('input-texto').value.trim();
 
