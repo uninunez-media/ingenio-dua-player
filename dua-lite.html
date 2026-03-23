@@ -12,7 +12,6 @@
     <script src="https://ableplayer.github.io/ableplayer/build/ableplayer.dist.js"></script>
 
     <style>
-        /* TU CSS INTACTO */
         :root {
             --split-x: 80%;
             --split-y: 40%;
@@ -244,18 +243,28 @@
                 }
             }
 
-            // 2. Inyectar Pistas de Accesibilidad (VTTs)
-            const idiomasNombres = { 'es': 'Español', 'en': 'Inglés', 'fr': 'Francés' };
+            // 2. Inyectar Pistas de Accesibilidad (Para cualquier idioma)
+            
+            // Función inteligente para traducir códigos (es, en, pt, de) a su nombre real
+            const getLanguageName = (code) => {
+                try {
+                    const name = new Intl.DisplayNames(['es'], { type: 'language' }).of(code);
+                    return name.charAt(0).toUpperCase() + name.slice(1);
+                } catch (e) {
+                    return code.toUpperCase(); // Si pone un código raro, lo deja en mayúsculas
+                }
+            };
+
             for (const [key, value] of params.entries()) {
                 if (!value) continue;
                 const partes = key.split('_'); 
                 if (partes.length !== 2) continue;
                 
                 const tipo = partes[0];
-                const lang = partes[1];
+                const lang = partes[1].toLowerCase();
                 let kind = '';
 
-                if (tipo === 'sub') kind = 'captions';
+                if (tipo === 'sub') kind = 'captions'; 
                 else if (tipo === 'cap') kind = 'chapters';
                 else if (tipo === 'desc') kind = 'descriptions';
 
@@ -264,7 +273,8 @@
                     track.kind = kind;
                     track.src = value;
                     track.srclang = lang;
-                    track.label = idiomasNombres[lang] || lang.toUpperCase();
+                    track.label = getLanguageName(lang); // Llama a la función inteligente
+                    
                     if (tipo === 'sub' && lang === 'es') track.default = true; 
                     mediaElement.appendChild(track);
                 }
