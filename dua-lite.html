@@ -412,6 +412,18 @@
             }
         }
         setInterval(checkLayout, 500);
+        // --- RECEPTOR DE ÓRDENES DEL BLOQUE MOODLE ---
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.accion === 'cambioDUA') {
+                const urlActual = new URL(window.location.href);
+                
+                // Actualiza el perfil en la URL
+                urlActual.searchParams.set('perfil', event.data.perfil);
+                
+                // AblePlayer requiere un recargo limpio del DOM para cambiar de video a audio o viceversa sin errores
+                window.location.replace(urlActual.href);
+            }
+        });
     </script>
 </body>
 </html>
