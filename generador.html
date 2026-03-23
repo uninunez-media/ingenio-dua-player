@@ -127,38 +127,68 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias Globales
+    // --- 1. REFERENCIAS GLOBALES ---
     const contSenas = document.getElementById('contenedor-senas');
     const contPistas = document.getElementById('contenedor-pistas');
     const previewEmpty = document.getElementById('preview-empty');
     const previewContent = document.getElementById('preview-content');
     const codigoResultado = document.getElementById('codigo-resultado');
+    const btnCopiar = document.getElementById('btn-copiar');
     const tabs = document.querySelectorAll('.sim-tab');
 
-    // Plantillas de Mockup
-    const mockups = {
-        lectura: `<div class="bg-white p-6 rounded border h-full"><h1 class="text-2xl font-bold mb-4">Modo Lectura</h1><p class="text-gray-600">Este es el texto base optimizado para concentración profunda y lectores de pantalla.</p><div class="h-4 bg-gray-100 rounded w-full mt-4"></div><div class="h-4 bg-gray-100 rounded w-5/6 mt-2"></div></div>`,
-        escucha: `<div class="flex-1 flex flex-col items-center justify-center h-full"><div class="bg-white p-6 rounded-2xl shadow-sm border flex items-center gap-4 w-full"><span class="material-symbols-outlined text-4xl text-blue-500">volume_up</span><div><h4 class="font-bold">Modo Escucha Activo</h4><p class="text-xs text-gray-500">Reproduciendo podcast/audio...</p></div></div></div>`,
-        bajoconsumo: `<div class="bg-orange-50 border border-orange-200 p-4 rounded mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-orange-500">warning</span><p class="text-xs font-bold">Ahorro de datos activo</p></div><div class="bg-white p-4 rounded border flex-1 text-gray-500 text-sm">Versión ligera sin carga de video.</div>`
-    };
+    // Variable para guardar la URL base del reproductor generado
+    let urlGeneradaActual = "";
 
-    // Funciones de bloques dinámicos
-    document.getElementById('btn-add-sena').onclick = () => {
-        contSenas.insertAdjacentHTML('beforeend', `<div class="bloque-sena flex gap-2 items-end p-3 bg-surface-container rounded-lg relative"><div class="flex-1"><span class="text-[10px] font-bold uppercase">Idioma</span><input type="text" class="sena-lang w-full bg-white border-none rounded-md text-sm p-2" placeholder="ej. lsc"></div><div class="flex-[3]"><span class="text-[10px] font-bold uppercase">URL Video Señas</span><input type="text" class="sena-url w-full bg-white border-none rounded-md text-sm p-2" placeholder="ID o URL YouTube"></div><button type="button" class="btn-borrar p-2 text-error"><span class="material-symbols-outlined">delete</span></button></div>`);
-    };
+    // --- 2. PLANTILLAS DE BLOQUES DINÁMICOS ---
+    const tplSena = `
+        <div class="bloque-sena flex gap-2 items-end p-3 bg-surface-container rounded-lg relative">
+            <div class="flex-[1]">
+                <span class="text-[10px] font-bold uppercase">Idioma</span>
+                <input type="text" class="sena-lang w-full bg-white border-none rounded-md text-sm p-2" placeholder="ej. lsc">
+            </div>
+            <div class="flex-[3]">
+                <span class="text-[10px] font-bold uppercase">URL Video Señas</span>
+                <input type="text" class="sena-url w-full bg-white border-none rounded-md text-sm p-2" placeholder="ID o URL YouTube">
+            </div>
+            <button type="button" class="btn-borrar p-2 text-error hover:bg-error-container rounded-md transition-colors">
+                <span class="material-symbols-outlined">delete</span>
+            </button>
+        </div>`;
 
-    document.getElementById('btn-add-pista').onclick = () => {
-        contPistas.insertAdjacentHTML('beforeend', `<div class="bloque-pista bg-surface-container p-4 rounded-lg relative border border-surface-variant"><div class="flex justify-between items-center mb-2"><div class="flex items-center gap-2"><span class="text-[10px] font-bold uppercase">Idioma:</span><input type="text" class="pista-lang w-16 bg-white border-none rounded-md text-xs p-1" placeholder="es"></div><button type="button" class="btn-borrar text-error text-xs font-bold">Borrar</button></div><div class="grid grid-cols-1 gap-2"><input type="text" class="pista-sub w-full bg-white border-none rounded-md text-xs p-2" placeholder="Subtítulos (.vtt)"><input type="text" class="pista-cap w-full bg-white border-none rounded-md text-xs p-2" placeholder="Capítulos (.vtt)"><input type="text" class="pista-desc w-full bg-white border-none rounded-md text-xs p-2" placeholder="Descripciones (.vtt)"><input type="text" class="pista-audesc w-full bg-white border-none rounded-md text-xs p-2" placeholder="Audio-descripción (.mp3)"></div></div>`);
-    };
+    const tplPista = `
+        <div class="bloque-pista bg-surface-container p-4 rounded-lg relative border border-surface-variant">
+            <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold uppercase">Código Idioma:</span>
+                    <input type="text" class="pista-lang w-16 bg-white border-none rounded-md text-xs p-1" placeholder="es">
+                </div>
+                <button type="button" class="btn-borrar text-error text-xs font-bold flex items-center hover:underline">
+                    <span class="material-symbols-outlined text-sm">delete</span> Borrar
+                </button>
+            </div>
+            <div class="grid grid-cols-1 gap-2">
+                <input type="text" class="pista-sub w-full bg-white border-none rounded-md text-xs p-2" placeholder="Subtítulos (.vtt)">
+                <input type="text" class="pista-cap w-full bg-white border-none rounded-md text-xs p-2" placeholder="Capítulos (.vtt)">
+                <input type="text" class="pista-desc w-full bg-white border-none rounded-md text-xs p-2" placeholder="Descripciones (.vtt)">
+                <input type="text" class="pista-audesc w-full bg-white border-none rounded-md text-xs p-2" placeholder="Audio-descripción (.mp3)">
+            </div>
+        </div>`;
 
-    document.body.onclick = (e) => { if (e.target.closest('.btn-borrar')) e.target.closest('.bloque-sena, .bloque-pista').remove(); };
+    // --- 3. FUNCIONES DE MANIPULACIÓN DEL DOM ---
+    document.getElementById('btn-add-sena').onclick = () => contSenas.insertAdjacentHTML('beforeend', tplSena);
+    document.getElementById('btn-add-pista').onclick = () => contPistas.insertAdjacentHTML('beforeend', tplPista);
+    
+    // Delegación de eventos para borrar bloques
+    document.body.onclick = (e) => {
+        if (e.target.closest('.btn-borrar')) e.target.closest('.bloque-sena, .bloque-pista').remove();
+    };
 
     function extractYouTubeID(url) {
         const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&]{11})/);
         return match ? match[1] : url;
     }
 
-    // Botón Generar
+    // --- 4. LÓGICA DEL BOTÓN GENERAR ---
     document.getElementById('btn-generar').onclick = () => {
         let params = new URLSearchParams();
         const video = document.getElementById('input-video').value.trim();
@@ -168,12 +198,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (video) params.append('v', extractYouTubeID(video));
         if (audio) params.append('audio', audio);
 
+        // Recolectar Señas
         document.querySelectorAll('.bloque-sena').forEach(b => {
             const l = b.querySelector('.sena-lang').value.trim().toLowerCase();
             const u = b.querySelector('.sena-url').value.trim();
             if (l && u) params.append(`ls_${l}`, extractYouTubeID(u));
         });
 
+        // Recolectar Pistas
         document.querySelectorAll('.bloque-pista').forEach(b => {
             const l = b.querySelector('.pista-lang').value.trim().toLowerCase();
             if (!l) return;
@@ -184,70 +216,91 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const urlBase = "https://uninunez-media.github.io/ingenio-dua-player/dua-lite.html";
-        const iframeCode = `<iframe id="iframe-reproductor" src="${urlBase}?${params.toString()}" width="100%" height="450px" frameborder="0" allowfullscreen></iframe>\n\n<div class="sr-only">${texto}</div>`;
+        urlGeneradaActual = `${urlBase}?${params.toString()}`;
+        
+        const iframeCode = `<iframe id="iframe-reproductor" src="${urlGeneradaActual}" width="100%" height="450px" frameborder="0" allowfullscreen></iframe>\n\n<div class="sr-only">${texto}</div>`;
         
         codigoResultado.value = iframeCode;
+
+        // Activar la vista previa
         previewEmpty.classList.add('hidden');
         previewContent.classList.remove('hidden');
         
-        // Activar pestaña audiovisual por defecto
+        // Disparar la pestaña Audiovisual por defecto
         document.querySelector('button[data-vista="audiovisual"]').click();
     };
 
-    // Lógica de Pestañas
-    // Lógica de Pestañas
+    // --- 5. LÓGICA DE LAS PESTAÑAS DEL SIMULADOR ---
     tabs.forEach(tab => {
         tab.onclick = (e) => {
-            tabs.forEach(t => t.classList.replace('bg-primary', 'bg-transparent') || t.classList.replace('text-white', 'text-on-surface-variant'));
+            // Estilos de botones
+            tabs.forEach(t => {
+                t.classList.replace('bg-primary', 'bg-transparent');
+                t.classList.add('text-on-surface-variant');
+                t.classList.remove('text-white');
+            });
             e.currentTarget.classList.replace('bg-transparent', 'bg-primary');
             e.currentTarget.classList.replace('text-on-surface-variant', 'text-white');
 
-            if (previewContent.classList.contains('hidden')) return;
+            if (!urlGeneradaActual) return;
 
             const vista = e.currentTarget.getAttribute('data-vista');
             const textoInput = document.getElementById('input-texto').value.trim();
 
             if (vista === 'audiovisual') {
-                previewContent.innerHTML = codigoResultado.value;
+                previewContent.innerHTML = `<iframe src="${urlGeneradaActual}" width="100%" height="450px" frameborder="0" allowfullscreen></iframe>`;
             } 
             else if (vista === 'escucha') {
-                const urlOriginal = new URL(document.getElementById('iframe-reproductor').src);
-                urlOriginal.searchParams.set('perfil', 'escucha');
-                previewContent.innerHTML = `<iframe src="${urlOriginal.href}" width="100%" height="450px" frameborder="0" allowfullscreen></iframe>`;
+                const urlAudio = new URL(urlGeneradaActual);
+                urlAudio.searchParams.set('perfil', 'escucha');
+                previewContent.innerHTML = `<iframe src="${urlAudio.href}" width="100%" height="450px" frameborder="0" allowfullscreen></iframe>`;
             }
             else if (vista === 'lectura') {
-                // LÓGICA PARA PDF O TEXTO
                 if (textoInput.startsWith('http')) {
-                    // Si es una URL (PDF o página), la incrustamos
-                    // Usamos Google Docs Viewer como fallback para asegurar que el PDF se vea
-                    const pdfUrl = textoInput.toLowerCase().endsWith('.pdf') 
-                        ? `https://docs.google.com/viewer?url=${encodeURIComponent(textoInput)}&embedded=true`
-                        : textoInput;
-
-                    previewContent.innerHTML = `<iframe src="${pdfUrl}" width="100%" height="450px" frameborder="0"></iframe>`;
+                    // Visor nativo para evitar CSP de Google
+                    previewContent.innerHTML = `
+                        <div class="w-full h-full bg-white rounded-lg border overflow-hidden">
+                            <object data="${textoInput}" type="application/pdf" width="100%" height="450px">
+                                <iframe src="${textoInput}" width="100%" height="450px" frameborder="0"></iframe>
+                            </object>
+                        </div>`;
                 } else {
-                    // Si es solo texto, usamos el diseño limpio
                     previewContent.innerHTML = `
                         <div class="bg-white p-6 rounded border h-full overflow-y-auto">
-                            <h2 class="text-xl font-bold mb-4">Vista de Lectura</h2>
-                            <p class="text-gray-800 leading-relaxed">${textoInput || 'No hay contenido de texto definido.'}</p>
+                            <h2 class="text-xl font-bold mb-4 text-primary">Vista de Lectura</h2>
+                            <p class="text-gray-800 leading-relaxed whitespace-pre-wrap">${textoInput || 'No hay contenido de texto definido.'}</p>
                         </div>`;
                 }
             }
             else if (vista === 'bajoconsumo') {
-                previewContent.innerHTML = mockups[vista];
+                previewContent.innerHTML = `
+                    <div class="bg-orange-50 border border-orange-200 p-4 rounded mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-orange-500">warning</span>
+                        <p class="text-xs font-bold text-orange-800">Modo ahorro de datos activo</p>
+                    </div>
+                    <div class="bg-white p-4 rounded border flex-1 text-gray-500 text-sm overflow-y-auto">
+                        <p>${textoInput ? textoInput.substring(0, 500) + '...' : 'Cargando versión ligera de texto educativo...'}</p>
+                    </div>`;
             }
         };
     });
-    // Copiar
-    document.getElementById('btn-copiar').onclick = () => {
+
+    // --- 6. BOTÓN COPIAR ---
+    btnCopiar.onclick = () => {
+        if (!codigoResultado.value) return;
         codigoResultado.select();
         document.execCommand('copy');
-        document.getElementById('btn-copiar').innerText = "¡Listo!";
-        setTimeout(() => document.getElementById('btn-copiar').innerText = "Copiar", 2000);
+        const originalText = btnCopiar.innerText;
+        btnCopiar.innerText = "¡Copiado!";
+        btnCopiar.classList.replace('bg-secondary', 'bg-green-600');
+        setTimeout(() => {
+            btnCopiar.innerText = originalText;
+            btnCopiar.classList.replace('bg-green-600', 'bg-secondary');
+        }, 2000);
     };
 
-    // Inicializar con un bloque
+    // --- 7. INICIALIZACIÓN ---
+    // Añadir un bloque de cada uno por defecto para guiar al usuario
     document.getElementById('btn-add-sena').click();
     document.getElementById('btn-add-pista').click();
 });
