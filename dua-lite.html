@@ -193,9 +193,8 @@
             });
         }
 
-// LÓGICA DE CONSTRUCCIÓN DINÁMICA
         function init() {
-            // --- NUEVO: VALIDACIÓN DE EXISTENCIA DE RECURSOS ---
+            
             function mostrarMensajeVacio(mensaje, icono) {
                 document.body.innerHTML = `
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f8f9fa; font-family: sans-serif; text-align: center; padding: 20px; box-sizing: border-box;">
@@ -216,24 +215,55 @@
                 mostrarMensajeVacio("El docente no ha incluido una versión en audio para este recurso.", "🎧");
                 return; // Detiene la ejecución
             }
-            // --- FIN NUEVO ---
 
             let mediaElement;
             const elementId = 'media-recurso';
+            
+            // Detectar si el video es un ID de YouTube (11 caracteres) o un MP4/URL directa
+            const isYouTube = videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId);
 
-            // 1. Determinar si es Audio o Video según el perfil y los datos
-            if (perfilActivo === 'escucha' || (!videoId && audioSrc)) {
-                // MODO AUDIO
-                mediaElement = document.createElement('audio');
-                mediaElement.id = elementId;
-                mediaElement.preload = "auto";
-                if (audioSrc) mediaElement.src = audioSrc;
-                // Ocultar layout de video
+            // 1. Determinar si es Modo Escucha
+            if (perfilActivo === 'escucha') {
+                
+                // Si no hay audio, usamos el video como salvavidas
+                const fallbackSrc = (!audioSrc && videoId) ? videoId : audioSrc;
+
+                // BLINDAJE VISUAL: Forzamos a ocultar video, señas y transcripción
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    #player .able-media-container { display: none !important; }
+                    .able-sign-window, .able-transcript-area { display: none !important; }
+                `;
+                document.head.appendChild(style);
+
+                if (isYouTube && !audioSrc) {
+                    // Si es YouTube, DEBE ser <video>, pero lo ocultamos visualmente
+                    mediaElement = document.createElement('video');
+                    mediaElement.setAttribute('data-youtube-id', videoId);
+                    mediaElement.setAttribute('data-youtube-nocookie', 'true');
+                } else if (fallbackSrc) {
+                    // Si es Audio real o un MP4, usamos <audio>
+                    mediaElement = document.createElement('audio');
+                    const source = document.createElement('source');
+                    source.src = fallbackSrc;
+                    mediaElement.appendChild(source);
+                }
+
+                if (mediaElement) {
+                    mediaElement.id = elementId;
+                    mediaElement.preload = "auto";
+                    mediaElement.setAttribute('data-able-player', '');
+                    // Evitamos que AblePlayer gaste memoria construyendo la transcripción
+                    mediaElement.setAttribute('data-include-transcript', 'false'); 
+                }
+
+                // Ocultar resizer y expandir el layout
                 document.getElementById('resizer-x').style.display = 'none';
                 document.documentElement.style.setProperty('--split-x', '100%');
                 document.documentElement.style.setProperty('--split-y', '100%');
+                
             } else {
-                // MODO VIDEO
+                // MODO VIDEO NORMAL (Audiovisual)
                 mediaElement = document.createElement('video');
                 mediaElement.id = elementId;
                 mediaElement.preload = "auto";
@@ -241,11 +271,15 @@
                 mediaElement.setAttribute('playsinline', '');
                 
                 if (videoId) {
-                    mediaElement.setAttribute('data-youtube-id', videoId);
-                    mediaElement.setAttribute('data-youtube-nocookie', 'true');
+                    if (isYouTube) {
+                        mediaElement.setAttribute('data-youtube-id', videoId);
+                        mediaElement.setAttribute('data-youtube-nocookie', 'true');
+                    } else {
+                        mediaElement.src = videoId; // Es un MP4 directo
+                    }
                 }
 
-                // Extraer Señas (Toma la primera que encuentre como principal)
+                // Extraer y configurar Señas (Solo en modo video)
                 let signId = null;
                 let signLabelText = null;
                 for (const [key, value] of params.entries()) {
@@ -266,15 +300,13 @@
                 }
             }
 
-            // 2. Inyectar Pistas de Accesibilidad (Para cualquier idioma)
-            
-            // Función inteligente para traducir códigos (es, en, pt, de) a su nombre real
+            // 2. Inyectar Pistas de Accesibilidad (Subtítulos, Capítulos, etc.)
             const getLanguageName = (code) => {
                 try {
                     const name = new Intl.DisplayNames(['es'], { type: 'language' }).of(code);
                     return name.charAt(0).toUpperCase() + name.slice(1);
                 } catch (e) {
-                    return code.toUpperCase(); // Si pone un código raro, lo deja en mayúsculas
+                    return code.toUpperCase();
                 }
             };
 
@@ -296,8 +328,7 @@
                     track.kind = kind;
                     track.src = value;
                     track.srclang = lang;
-                    track.label = getLanguageName(lang); // Llama a la función inteligente
-                    
+                    track.label = getLanguageName(lang);
                     if (tipo === 'sub' && lang === 'es') track.default = true; 
                     mediaElement.appendChild(track);
                 }
@@ -306,16 +337,12 @@
             // 3. Montar y Ejecutar
             playerContainer.appendChild(mediaElement);
             
-            // Validar existencia de miniatura de señas antes de iniciar (como tenías)
-            const signSrcToValidate = mediaElement.getAttribute('data-youtube-sign-src');
-            if (signSrcToValidate) {
+            if (mediaElement.tagName.toLowerCase() === 'video' && mediaElement.hasAttribute('data-youtube-sign-src')) {
+                const signSrcToValidate = mediaElement.getAttribute('data-youtube-sign-src');
                 const img = new Image();
                 img.src = `https://img.youtube.com/vi/${signSrcToValidate}/mqdefault.jpg`;
                 img.onload = function() {
-                    if (this.width === 120) {
-                        console.warn("Video de señas no disponible.");
-                        mediaElement.removeAttribute('data-youtube-sign-src');
-                    }
+                    if (this.width === 120) mediaElement.removeAttribute('data-youtube-sign-src');
                     startPlayer(elementId);
                 };
                 img.onerror = function() { startPlayer(elementId); };
