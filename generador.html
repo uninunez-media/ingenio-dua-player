@@ -15,12 +15,13 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #ce1126; border-radius: 10px; }
+        #preview-canvas iframe { border-radius: 8px; border: 1px solid #ddd; }
     </style>
 </head>
 <body class="bg-surface font-body text-on-surface antialiased">
 <main class="pb-12 px-6 max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8 min-h-screen pt-6">
     
-    <!-- Left Column: Editor Form -->
+    <!-- COLUMNA IZQUIERDA: FORMULARIO -->
     <section class="flex-1 space-y-8">
         <div class="space-y-2">
             <h1 class="text-4xl font-extrabold tracking-tight text-on-surface">Generador Multimodal DUA</h1>
@@ -33,7 +34,7 @@
                     <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">description</span>
                     <h2 class="text-xl font-bold">Contenido Base (Texto)</h2>
                 </div>
-                <textarea id="input-texto" class="w-full bg-surface-container-high border-none rounded-lg p-4 text-sm" placeholder="Texto o URL de respaldo..."></textarea>
+                <textarea id="input-texto" class="w-full bg-surface-container-high border-none rounded-lg p-4 text-sm" placeholder="Resumen o texto para el lector de pantalla..."></textarea>
             </div>
 
             <!-- Video & Señas -->
@@ -42,15 +43,13 @@
                     <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">movie</span>
                     <h2 class="text-xl font-bold">Video</h2>
                 </div>
-                <input id="input-video" class="w-full bg-surface-container-high border-none rounded-lg px-4 py-3 mb-6 text-sm" placeholder="URL Video (MP4, YouTube)" type="text"/>
+                <input id="input-video" class="w-full bg-surface-container-high border-none rounded-lg px-4 py-3 mb-6 text-sm" placeholder="URL Video (YouTube o MP4)" type="text"/>
                 
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-sm font-bold uppercase">Lengua de Señas</span>
                     <button type="button" id="btn-add-sena" class="text-secondary text-xs font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">add</span> Añadir Idioma</button>
                 </div>
-                <div id="contenedor-senas" class="space-y-2">
-                    <!-- Los bloques de señas irán aquí -->
-                </div>
+                <div id="contenedor-senas" class="space-y-2"></div>
             </div>
 
             <!-- Audio -->
@@ -67,13 +66,11 @@
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
                         <span class="material-symbols-outlined text-outline" style="font-variation-settings: 'FILL' 1;">universal_currency</span>
-                        <h2 class="text-xl font-bold">Pistas Alternativas (.vtt / .mp3)</h2>
+                        <h2 class="text-xl font-bold">Pistas de Accesibilidad (.vtt)</h2>
                     </div>
                     <button type="button" id="btn-add-pista" class="text-secondary text-xs font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">add</span> Añadir Idioma</button>
                 </div>
-                <div id="contenedor-pistas" class="space-y-4">
-                    <!-- Los bloques de pistas irán aquí -->
-                </div>
+                <div id="contenedor-pistas" class="space-y-4"></div>
             </div>
         </div>
 
@@ -82,18 +79,47 @@
         </button>
     </section>
 
-    <!-- Right Column: Code & Preview -->
+    <!-- COLUMNA DERECHA: VISTA PREVIA Y CÓDIGO -->
     <aside class="flex-1 lg:sticky lg:top-6 h-fit space-y-6">
+        
+        <!-- Simulador Dinámico -->
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col border border-surface-variant">
+            <div class="bg-surface p-2 border-b border-surface-variant flex gap-1 overflow-x-auto">
+                <button data-vista="audiovisual" class="sim-tab flex-1 min-w-[100px] py-2 px-3 rounded-lg bg-primary text-white font-bold text-xs transition-all flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">play_circle</span> Audiovisual
+                </button>
+                <button data-vista="lectura" class="sim-tab flex-1 min-w-[100px] py-2 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container font-semibold text-xs transition-all flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">auto_stories</span> Lectura
+                </button>
+                <button data-vista="escucha" class="sim-tab flex-1 min-w-[100px] py-2 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container font-semibold text-xs transition-all flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">headphones</span> Escucha
+                </button>
+                <button data-vista="bajoconsumo" class="sim-tab flex-1 min-w-[100px] py-2 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container font-semibold text-xs transition-all flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">bolt</span> Ligero
+                </button>
+            </div>
+
+            <div id="preview-canvas" class="p-4 bg-slate-50 min-h-[350px] flex flex-col relative">
+                <div id="preview-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-slate-50">
+                    <span class="material-symbols-outlined text-on-surface-variant text-5xl mb-3">visibility_off</span>
+                    <h3 class="text-lg font-bold">Sin Vista Previa</h3>
+                    <p class="text-xs text-on-surface-variant">Configura el recurso y haz clic en "Generar".</p>
+                </div>
+                <div id="preview-content" class="hidden w-full h-full flex flex-col"></div>
+            </div>
+        </div>
+
+        <!-- Panel de Código -->
         <div class="bg-slate-900 rounded-xl overflow-hidden shadow-xl">
             <div class="flex items-center justify-between px-4 py-3 bg-slate-800">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-slate-400 text-sm">code</span>
-                    <span class="text-xs font-bold text-slate-300 uppercase">Código Iframe Generado</span>
+                    <span class="text-xs font-bold text-slate-300 uppercase">Iframe Resultante</span>
                 </div>
                 <button id="btn-copiar" class="bg-secondary px-3 py-1 rounded text-[11px] font-bold text-white hover:bg-opacity-90 active:scale-95">Copiar</button>
             </div>
             <div class="p-4">
-                <textarea id="codigo-resultado" class="w-full bg-transparent border-none text-blue-300 font-mono text-sm focus:ring-0 min-h-[250px] resize-none" placeholder="El código final del iframe aparecerá aquí al presionar 'Generar Código Moodle'..." readonly></textarea>
+                <textarea id="codigo-resultado" class="w-full bg-transparent border-none text-blue-300 font-mono text-xs focus:ring-0 min-h-[150px] resize-none" placeholder="Aquí aparecerá el código..." readonly></textarea>
             </div>
         </div>
     </aside>
@@ -101,119 +127,102 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias
+    // Referencias Globales
     const contSenas = document.getElementById('contenedor-senas');
     const contPistas = document.getElementById('contenedor-pistas');
-    const btnAddSena = document.getElementById('btn-add-sena');
-    const btnAddPista = document.getElementById('btn-add-pista');
-    
-    // Plantillas HTML
-    const tplSena = `
-        <div class="bloque-sena flex gap-2 items-end p-3 bg-surface-container rounded-lg relative">
-            <div class="flex-[1]">
-                <span class="text-[10px] font-bold uppercase">Idioma</span>
-                <input type="text" class="sena-lang w-full bg-white border-none rounded-md text-sm p-2" placeholder="ej. lsc, lse, asl">
-            </div>
-            <div class="flex-[3]">
-                <span class="text-[10px] font-bold uppercase">URL Video Señas</span>
-                <input type="text" class="sena-url w-full bg-white border-none rounded-md text-sm p-2" placeholder="URL MP4">
-            </div>
-            <button type="button" class="btn-borrar p-2 text-error hover:bg-error-container rounded-md"><span class="material-symbols-outlined">delete</span></button>
-        </div>`;
+    const previewEmpty = document.getElementById('preview-empty');
+    const previewContent = document.getElementById('preview-content');
+    const codigoResultado = document.getElementById('codigo-resultado');
+    const tabs = document.querySelectorAll('.sim-tab');
 
-    const tplPista = `
-        <div class="bloque-pista bg-surface-container p-4 rounded-lg relative border border-surface-variant">
-            <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold uppercase">Código Idioma:</span>
-                    <input type="text" class="pista-lang w-24 bg-white border-none rounded-md text-xs p-1" placeholder="ej. es, en">
-                </div>
-                <button type="button" class="btn-borrar text-error text-xs font-bold flex items-center"><span class="material-symbols-outlined text-sm">delete</span> Borrar</button>
-            </div>
-            <div class="grid grid-cols-1 gap-2">
-                <input type="text" class="pista-sub w-full bg-white border-none rounded-md text-xs p-2" placeholder="Subtítulos (.vtt)">
-                <input type="text" class="pista-cap w-full bg-white border-none rounded-md text-xs p-2" placeholder="Capítulos (.vtt)">
-                <input type="text" class="pista-desc w-full bg-white border-none rounded-md text-xs p-2" placeholder="Descripciones (.vtt)">
-                <input type="text" class="pista-audesc w-full bg-white border-none rounded-md text-xs p-2" placeholder="Audio-descripción (.mp3)">
-            </div>
-        </div>`;
+    // Plantillas de Mockup
+    const mockups = {
+        lectura: `<div class="bg-white p-6 rounded border h-full"><h1 class="text-2xl font-bold mb-4">Modo Lectura</h1><p class="text-gray-600">Este es el texto base optimizado para concentración profunda y lectores de pantalla.</p><div class="h-4 bg-gray-100 rounded w-full mt-4"></div><div class="h-4 bg-gray-100 rounded w-5/6 mt-2"></div></div>`,
+        escucha: `<div class="flex-1 flex flex-col items-center justify-center h-full"><div class="bg-white p-6 rounded-2xl shadow-sm border flex items-center gap-4 w-full"><span class="material-symbols-outlined text-4xl text-blue-500">volume_up</span><div><h4 class="font-bold">Modo Escucha Activo</h4><p class="text-xs text-gray-500">Reproduciendo podcast/audio...</p></div></div></div>`,
+        bajoconsumo: `<div class="bg-orange-50 border border-orange-200 p-4 rounded mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-orange-500">warning</span><p class="text-xs font-bold">Ahorro de datos activo</p></div><div class="bg-white p-4 rounded border flex-1 text-gray-500 text-sm">Versión ligera sin carga de video.</div>`
+    };
 
-    // Funciones para añadir bloques
-    btnAddSena.addEventListener('click', () => contSenas.insertAdjacentHTML('beforeend', tplSena));
-    btnAddPista.addEventListener('click', () => contPistas.insertAdjacentHTML('beforeend', tplPista));
+    // Funciones de bloques dinámicos
+    document.getElementById('btn-add-sena').onclick = () => {
+        contSenas.insertAdjacentHTML('beforeend', `<div class="bloque-sena flex gap-2 items-end p-3 bg-surface-container rounded-lg relative"><div class="flex-1"><span class="text-[10px] font-bold uppercase">Idioma</span><input type="text" class="sena-lang w-full bg-white border-none rounded-md text-sm p-2" placeholder="ej. lsc"></div><div class="flex-[3]"><span class="text-[10px] font-bold uppercase">URL Video Señas</span><input type="text" class="sena-url w-full bg-white border-none rounded-md text-sm p-2" placeholder="ID o URL YouTube"></div><button type="button" class="btn-borrar p-2 text-error"><span class="material-symbols-outlined">delete</span></button></div>`);
+    };
 
-    // Delegación de eventos para borrar bloques
-    document.body.addEventListener('click', (e) => {
-        if (e.target.closest('.btn-borrar')) {
-            e.target.closest('.bloque-sena, .bloque-pista').remove();
-        }
-    });
+    document.getElementById('btn-add-pista').onclick = () => {
+        contPistas.insertAdjacentHTML('beforeend', `<div class="bloque-pista bg-surface-container p-4 rounded-lg relative border border-surface-variant"><div class="flex justify-between items-center mb-2"><div class="flex items-center gap-2"><span class="text-[10px] font-bold uppercase">Idioma:</span><input type="text" class="pista-lang w-16 bg-white border-none rounded-md text-xs p-1" placeholder="es"></div><button type="button" class="btn-borrar text-error text-xs font-bold">Borrar</button></div><div class="grid grid-cols-1 gap-2"><input type="text" class="pista-sub w-full bg-white border-none rounded-md text-xs p-2" placeholder="Subtítulos (.vtt)"><input type="text" class="pista-cap w-full bg-white border-none rounded-md text-xs p-2" placeholder="Capítulos (.vtt)"><input type="text" class="pista-desc w-full bg-white border-none rounded-md text-xs p-2" placeholder="Descripciones (.vtt)"><input type="text" class="pista-audesc w-full bg-white border-none rounded-md text-xs p-2" placeholder="Audio-descripción (.mp3)"></div></div>`);
+    };
 
-    // Añadir un bloque de cada uno por defecto al cargar
-    btnAddSena.click();
-    btnAddPista.click();
+    document.body.onclick = (e) => { if (e.target.closest('.btn-borrar')) e.target.closest('.bloque-sena, .bloque-pista').remove(); };
 
-    // Función auxiliar para extraer ID de YouTube
     function extractYouTubeID(url) {
         const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&]{11})/);
-        return match ? match[1] : url; // Si no es URL válida, devuelve el texto tal cual por si ya es un ID
+        return match ? match[1] : url;
     }
 
-    // Lógica del botón Generar
-    document.getElementById('btn-generar').addEventListener('click', () => {
-        let parametros = new URLSearchParams();
-
-        const videoRaw = document.getElementById('input-video').value.trim();
+    // Botón Generar
+    document.getElementById('btn-generar').onclick = () => {
+        let params = new URLSearchParams();
+        const video = document.getElementById('input-video').value.trim();
+        const audio = document.getElementById('input-audio').value.trim();
         const texto = document.getElementById('input-texto').value.trim();
         
-        // Video principal
-        if (videoRaw) parametros.append('v', extractYouTubeID(videoRaw));
+        if (video) params.append('v', extractYouTubeID(video));
+        if (audio) params.append('audio', audio);
 
-        // Lengua de Señas (Toma la primera ingresada para AblePlayer)
-        const primerSena = document.querySelector('.bloque-sena');
-        if (primerSena) {
-            const lang = primerSena.querySelector('.sena-lang').value.trim().toUpperCase();
-            const urlSena = primerSena.querySelector('.sena-url').value.trim();
-            if (urlSena) {
-                parametros.append('sign', extractYouTubeID(urlSena));
-                if (lang) parametros.append('label', lang);
-            }
-        }
-
-        // Extraer Pistas
-        document.querySelectorAll('.bloque-pista').forEach(bloque => {
-            const lang = bloque.querySelector('.pista-lang').value.trim().toLowerCase();
-            if (!lang) return;
-
-            const sub = bloque.querySelector('.pista-sub').value.trim();
-            const cap = bloque.querySelector('.pista-cap').value.trim();
-            const desc = bloque.querySelector('.pista-desc').value.trim();
-
-            if (sub) parametros.append(`sub_${lang}`, sub);
-            if (cap) parametros.append(`cap_${lang}`, cap);
-            if (desc) parametros.append(`desc_${lang}`, desc);
+        document.querySelectorAll('.bloque-sena').forEach(b => {
+            const l = b.querySelector('.sena-lang').value.trim().toLowerCase();
+            const u = b.querySelector('.sena-url').value.trim();
+            if (l && u) params.append(`ls_${l}`, extractYouTubeID(u));
         });
 
-        // Armar Iframe final
-        const urlBase = "https://uninunez-media.github.io/ingenio-dua-player/dua-lite.html";
-        const stringParams = parametros.toString();
-        const srcFinal = stringParams ? `${urlBase}?${stringParams}` : urlBase;
+        document.querySelectorAll('.bloque-pista').forEach(b => {
+            const l = b.querySelector('.pista-lang').value.trim().toLowerCase();
+            if (!l) return;
+            ['sub', 'cap', 'desc', 'audesc'].forEach(t => {
+                const v = b.querySelector(`.pista-${t}`).value.trim();
+                if (v) params.append(`${t}_${l}`, v);
+            });
+        });
 
-        const iframeCode = `<iframe id="iframe-reproductor" src="${srcFinal}" width="100%" height="600px" frameborder="0" allowfullscreen></iframe>\n\n<div class="sr-only">\n${texto}\n</div>`;
+        const urlBase = "https://uninunez-media.github.io/ingenio-dua-player/dua-lite.html";
+        const iframeCode = `<iframe id="iframe-reproductor" src="${urlBase}?${params.toString()}" width="100%" height="450px" frameborder="0" allowfullscreen></iframe>\n\n<div class="sr-only">${texto}</div>`;
         
-        document.getElementById('codigo-resultado').value = iframeCode;
+        codigoResultado.value = iframeCode;
+        previewEmpty.classList.add('hidden');
+        previewContent.classList.remove('hidden');
+        
+        // Activar pestaña audiovisual por defecto
+        document.querySelector('button[data-vista="audiovisual"]').click();
+    };
+
+    // Lógica de Pestañas
+    tabs.forEach(tab => {
+        tab.onclick = (e) => {
+            tabs.forEach(t => t.classList.replace('bg-primary', 'bg-transparent') || t.classList.replace('text-white', 'text-on-surface-variant'));
+            e.currentTarget.classList.replace('bg-transparent', 'bg-primary');
+            e.currentTarget.classList.replace('text-on-surface-variant', 'text-white');
+
+            if (previewContent.classList.contains('hidden')) return;
+
+            const vista = e.currentTarget.getAttribute('data-vista');
+            if (vista === 'audiovisual') {
+                previewContent.innerHTML = codigoResultado.value;
+            } else {
+                previewContent.innerHTML = mockups[vista];
+            }
+        };
     });
-    
-    // Botón Copiar
-    const btnCopiar = document.getElementById('btn-copiar');
-    btnCopiar.addEventListener('click', () => {
-        const codigo = document.getElementById('codigo-resultado');
-        if (!codigo.value) return;
-        codigo.select();
+
+    // Copiar
+    document.getElementById('btn-copiar').onclick = () => {
+        codigoResultado.select();
         document.execCommand('copy');
-        btnCopiar.innerText = "¡Copiado!";
-        setTimeout(() => btnCopiar.innerText = "Copiar", 2000);
-    });
+        document.getElementById('btn-copiar').innerText = "¡Listo!";
+        setTimeout(() => document.getElementById('btn-copiar').innerText = "Copiar", 2000);
+    };
+
+    // Inicializar con un bloque
+    document.getElementById('btn-add-sena').click();
+    document.getElementById('btn-add-pista').click();
 });
 </script>
 </body>
