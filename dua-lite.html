@@ -3,88 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor Accesible DUA</title>
+    <title>Reproductor DUA</title>
+
     <script src="//ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+
     <link rel="stylesheet" href="https://ableplayer.github.io/ableplayer/build/ableplayer.min.css">
     <script src="https://ableplayer.github.io/ableplayer/build/ableplayer.dist.js"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-        #dua-container { width: 100%; height: 100vh; position: relative; }
-        .visor-recurso { width: 100%; height: 100%; border: none; background: #fff; }
+        /* TU CSS INTACTO */
+        :root {
+            --split-x: 80%;
+            --split-y: 40%;
+            --resizer-w: 10px;
+            --safe-split-x: min(var(--split-x), calc(100vw - 250px - var(--resizer-w)));
+        }
 
-        /* Perfiles DUA Dinámicos */
-        body.perfil-lectura .able-media-container, 
-        body.perfil-lectura .able-sign-window { display: none !important; }
-        body.perfil-lectura .able-transcript-area { position: absolute !important; top:0 !important; left:0 !important; width: 100% !important; height: 100vh !important; z-index: 1000; }
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: sans-serif; background-color: #000;
+        }
+        #wrapper { position: relative; width: 100%; height: 100vh; background-color: #000; }
 
-        body.perfil-escucha .able-sign-window,
-        body.perfil-escucha #player video { opacity: 0 !important; pointer-events: none; } 
-        body.perfil-escucha .visor-recurso { filter: contrast(1.5) grayscale(1); }
+        #sign-label-overlay {
+            position: absolute; top: 5px; right: 5px; z-index: 20005; 
+            background: rgba(0, 0, 0, 0.6); padding: 4px 8px; border-radius: 4px;
+            border: 1px solid #444; color: #fff; font-size: 12px; font-weight: bold;
+            display: none; pointer-events: none;
+        }
+        #sign-label-overlay.visible { display: block; }
 
-        body.perfil-audiovisual .able-sign-window { display: block !important; width: 30% !important; z-index: 9999; }
+        #resizer-x {
+            position: fixed; left: var(--safe-split-x); top: 0; bottom: 0;
+            width: var(--resizer-w); background: #333; cursor: col-resize; z-index: 20000;
+            display: flex; align-items: center; justify-content: center;
+            border-left: 1px solid #555; border-right: 1px solid #000;
+        }
+        #resizer-x:hover, #resizer-x.dragging { background: #00aaff; border-color: #00aaff; }
+        #resizer-x::after { content: "⋮"; color: #888; font-size: 14px; }
+
+        #iframe-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 19999; cursor: col-resize;
+        }
+        body.is-resizing-x #iframe-overlay { display: block; }
+
+        #player {
+            position: absolute !important; left: 0 !important; top: 0 !important;
+            width: var(--safe-split-x) !important; height: 100vh !important;
+            z-index: 10 !important; box-sizing: border-box; background: #000;
+            transition: width 0.1s linear;
+        }
+        #player.expanded { width: 100vw !important; }
+
+        #player .able-wrapper, #player .able, #player .able-vidcap-container {
+            width: 100% !important; height: 100% !important;
+            padding: 0 !important; margin: 0 !important; max-width: none !important;
+            position: absolute !important; top: 0; left: 0;
+        }
+        #player .able-media-container {
+            width: 100% !important; height: 100% !important;
+            position: absolute !important; top: 0; left: 0;
+            padding-bottom: 0 !important; overflow: hidden !important;
+        }
+        #player iframe, #player video {
+            position: absolute !important; top: 0 !important; left: 0 !important;
+            width: 100% !important; height: 100% !important;
+            object-fit: cover !important; z-index: 1 !important;
+        }
+
+        div.able-sign-window {
+            position: fixed !important;
+            top: 0 !important;
+            left: calc(var(--safe-split-x) + var(--resizer-w)) !important;
+            right: 0 !important;
+            width: auto !important;
+            height: var(--split-y) !important; 
+            z-index: 9999 !important;
+            background: #222 !important;
+            border-bottom: 4px solid #333;
+            transition: height 0.3s ease;
+            contain: content; 
+        }
+        div.able-sign-window iframe { width: 100% !important; height: 100% !important; }
+
+        div.able-transcript-area {
+            position: fixed !important;
+            top: var(--split-y) !important;
+            bottom: 0 !important;
+            left: calc(var(--safe-split-x) + var(--resizer-w)) !important;
+            right: 0 !important;
+            width: auto !important;
+            height: auto !important;
+            z-index: 9999 !important;
+            background: #fff !important;
+            transition: top 0.3s ease;
+            display: block; overflow: hidden !important; padding: 0 !important; border-left: none !important;
+        }
+        .able-window-toolbar { display: none !important; }
+        div.able-transcript { position: absolute !important; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden !important; }
+        div.able-transcript-container { position: absolute !important; top: 0; left: 0; right: 0; bottom: 0; height: 100% !important; overflow-y: auto !important; padding: 15px !important; }
+
+        #player .able-player {
+            position: absolute !important; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 100 !important; pointer-events: none !important;
+            display: flex !important; flex-direction: column !important; justify-content: flex-end !important;
+        }
+        #player .able-controller, #player .able-window-toolbar, #player .able-big-play-button {
+            pointer-events: auto !important; z-index: 21000 !important; position: relative !important;
+        }
+        #player .able-controller {
+            order: 1 !important; width: 100% !important; background-color: rgba(0, 0, 0, 0.9) !important;
+            display: flex !important; flex-direction: column !important; padding-top: 5px !important;
+        }
+        #player button, #player input, #player .able-seekbar { pointer-events: auto !important; cursor: pointer !important; }
+        #player .able-status-bar {
+            order: 2 !important; position: relative !important; width: 100% !important;
+            background-color: rgba(0, 0, 0, 0.9) !important; color: #ddd !important;
+            display: flex !important; justify-content: space-between !important;
+            padding: 0 15px 5px 15px !important; pointer-events: auto !important;
+        }
+        #player .able-seekbar-wrapper { width: 98% !important; margin: 0 auto !important; }
+        #player .able-control-row { display: flex !important; flex-wrap: wrap !important; width: 100% !important; }
+        .able-tooltip { z-index: 22000 !important; bottom: 100% !important; top: auto !important; }
+        #player .able-captions-wrapper {
+            position: absolute !important; bottom: 100px !important; left: 0 !important; width: 100% !important;
+            z-index: 90 !important; pointer-events: none !important; background: transparent !important; text-align: center !important;
+        }
+        #player .able-captions {
+            background-color: rgba(0, 0, 0, 0.6) !important; display: inline-block !important;
+            padding: 5px 10px !important; border-radius: 4px; pointer-events: auto !important;
+        }
+
+        @media (max-width: 700px) {
+            html, body { overflow-y: auto !important; height: auto !important; }
+            #wrapper { height: auto !important; position: static !important; display: block !important; }
+            #resizer-x, #iframe-overlay { display: none !important; }
+            #sign-label-overlay { display: none !important; }
+            #player, #player.expanded { position: relative !important; width: 100vw !important; height: auto !important; }
+            #player .able-wrapper, #player .able { display: flex !important; flex-direction: column !important; height: auto !important; position: relative !important; }
+            #player .able-player { position: relative !important; height: auto !important; pointer-events: auto !important; order: 2 !important; }
+            #player .able-vidcap-container { order: 1 !important; position: relative !important; height: auto !important; }
+            #player .able-media-container { aspect-ratio: 16/9 !important; height: auto !important; position: relative !important; }
+            #player iframe, #player video { position: relative !important; object-fit: contain !important; height: 100% !important; }
+            div.able-sign-window {
+                order: 3 !important; position: relative !important; width: 100vw !important; aspect-ratio: 16 / 9 !important;
+                height: auto !important; max-height: 60vw !important; top: auto !important; right: auto !important; left: auto !important;
+                z-index: 1 !important; background: #000 !important;
+            }
+            div.able-sign-window iframe { position: absolute !important; height: 100% !important; }
+            div.able-transcript-area {
+                order: 4 !important; position: relative !important; width: 100% !important; left: 0 !important;
+                height: 400px !important; top: auto !important; border-top: 2px solid #333 !important; z-index: 1 !important;
+            }
+            .able-button-handler-restart, .able-button-handler-rewind, .able-button-handler-forward, .able-button-handler-chapters, .able-button-handler-preferences {
+                display: none !important;
+            }
+        }
+        #player iframe { pointer-events: none !important; }
     </style>
 </head>
+
 <body>
-    <div id="dua-container"></div>
+    <div id="iframe-overlay"></div>
+    <div id="resizer-x" title="Arrastra para ajustar ancho"></div>
+    <div id="sign-label-overlay">LS</div>
+
+    <div id="wrapper">
+        <div id="player">
+            <!-- El elemento multimedia (video/audio) se inyectará aquí dinámicamente -->
+        </div>
+    </div>
 
     <script>
         const params = new URLSearchParams(window.location.search);
-        const container = document.getElementById('dua-container');
-        const tipo = params.get('tipo') || 'video';
+        
+        // Parámetros principales
+        const videoId = params.get('v');
+        const audioSrc = params.get('audio');
+        const perfilActivo = params.get('perfil') || 'audiovisual'; // audiovisual, escucha
+        
+        const labelOverlay = document.getElementById('sign-label-overlay');
+        const playerContainer = document.getElementById('player');
 
-        function initRouter() {
-            if (tipo === 'pdf' || tipo === 'pagina') {
-                renderIframeResource();
-            } else {
-                renderVideoPlayer();
-            }
-            setupPostMessageListener();
-        }
-
-        function renderIframeResource() {
-            const src = params.get('src');
-            if (!src) { container.innerHTML = '<p style="color:white; padding:20px;">Falta la URL del recurso (src).</p>'; return; }
-            container.innerHTML = `<iframe class="visor-recurso" src="${src}" allowfullscreen></iframe>`;
-        }
-
-        function renderVideoPlayer() {
-            const ytId = params.get('yt');
-            const signId = params.get('sign');
-            
-            let videoHTML = `<video id="video1" preload="auto" playsinline `;
-            if (ytId) videoHTML += `data-youtube-id="${ytId}" `;
-            if (signId) videoHTML += `data-youtube-sign-src="${signId}" `;
-            videoHTML += `></video>`;
-            
-            container.innerHTML = `<div id="player">${videoHTML}</div>`;
-            const videoEl = document.getElementById('video1');
-
-            for (const [key, value] of params.entries()) {
-                if (key.startsWith('vtt_')) {
-                    const lang = key.split('_')[1];
-                    const track = document.createElement('track');
-                    track.kind = "captions"; track.src = value; track.srclang = lang; track.label = lang.toUpperCase();
-                    if (lang === 'es') track.default = true;
-                    videoEl.appendChild(track);
-                }
-            }
-
-            $(document).ready(function() { new AblePlayer($('#video1')); });
-        }
-
-        function setupPostMessageListener() {
-            window.addEventListener('message', (event) => {
-                const data = event.data;
-                if (data && data.accion === 'cambioDUA') {
-                    document.body.className = ''; 
-                    if (data.perfil !== 'estandar') document.body.classList.add(`perfil-${data.perfil}`);
-                }
+        // FUNCIÓN DE INICIO ABLEPLAYER
+        function startPlayer(elementId) {
+            $(document).ready(function() {
+                new AblePlayer($('#' + elementId)[0]);
             });
         }
 
-        initRouter();
+        // LÓGICA DE CONSTRUCCIÓN DINÁMICA
+        function init() {
+            let mediaElement;
+            const elementId = 'media-recurso';
+
+            // 1. Determinar si es Audio o Video según el perfil y los datos
+            if (perfilActivo === 'escucha' || (!videoId && audioSrc)) {
+                // MODO AUDIO
+                mediaElement = document.createElement('audio');
+                mediaElement.id = elementId;
+                mediaElement.preload = "auto";
+                if (audioSrc) mediaElement.src = audioSrc;
+                // Ocultar layout de video
+                document.getElementById('resizer-x').style.display = 'none';
+                document.documentElement.style.setProperty('--split-x', '100%');
+                document.documentElement.style.setProperty('--split-y', '100%');
+            } else {
+                // MODO VIDEO
+                mediaElement = document.createElement('video');
+                mediaElement.id = elementId;
+                mediaElement.preload = "auto";
+                mediaElement.setAttribute('crossorigin', 'anonymous');
+                mediaElement.setAttribute('playsinline', '');
+                
+                if (videoId) {
+                    mediaElement.setAttribute('data-youtube-id', videoId);
+                    mediaElement.setAttribute('data-youtube-nocookie', 'true');
+                }
+
+                // Extraer Señas (Toma la primera que encuentre como principal)
+                let signId = null;
+                let signLabelText = null;
+                for (const [key, value] of params.entries()) {
+                    if (key.startsWith('ls_') && value) {
+                        signId = value;
+                        signLabelText = key.split('_')[1].toUpperCase();
+                        break; 
+                    }
+                }
+
+                if (signId) {
+                    const cleanSignId = signId.trim();
+                    const youtubeRegex = /^[a-zA-Z0-9_-]{11}$/;
+                    if (youtubeRegex.test(cleanSignId)) {
+                        mediaElement.setAttribute('data-youtube-sign-src', cleanSignId);
+                        if (signLabelText) labelOverlay.textContent = signLabelText;
+                    }
+                }
+            }
+
+            // 2. Inyectar Pistas de Accesibilidad (VTTs)
+            const idiomasNombres = { 'es': 'Español', 'en': 'Inglés', 'fr': 'Francés' };
+            for (const [key, value] of params.entries()) {
+                if (!value) continue;
+                const partes = key.split('_'); 
+                if (partes.length !== 2) continue;
+                
+                const tipo = partes[0];
+                const lang = partes[1];
+                let kind = '';
+
+                if (tipo === 'sub') kind = 'captions';
+                else if (tipo === 'cap') kind = 'chapters';
+                else if (tipo === 'desc') kind = 'descriptions';
+
+                if (kind) {
+                    const track = document.createElement('track');
+                    track.kind = kind;
+                    track.src = value;
+                    track.srclang = lang;
+                    track.label = idiomasNombres[lang] || lang.toUpperCase();
+                    if (tipo === 'sub' && lang === 'es') track.default = true; 
+                    mediaElement.appendChild(track);
+                }
+            }
+
+            // 3. Montar y Ejecutar
+            playerContainer.appendChild(mediaElement);
+            
+            // Validar existencia de miniatura de señas antes de iniciar (como tenías)
+            const signSrcToValidate = mediaElement.getAttribute('data-youtube-sign-src');
+            if (signSrcToValidate) {
+                const img = new Image();
+                img.src = `https://img.youtube.com/vi/${signSrcToValidate}/mqdefault.jpg`;
+                img.onload = function() {
+                    if (this.width === 120) {
+                        console.warn("Video de señas no disponible.");
+                        mediaElement.removeAttribute('data-youtube-sign-src');
+                    }
+                    startPlayer(elementId);
+                };
+                img.onerror = function() { startPlayer(elementId); };
+            } else {
+                startPlayer(elementId);
+            }
+        }
+
+        init();
+
+        // --- TU LÓGICA DE LAYOUT & RESIZER INTACTA ---
+        const resizerX = document.getElementById('resizer-x');
+        const body = document.body;
+        let isResizingX = false;
+
+        resizerX.addEventListener('mousedown', () => { isResizingX = true; body.classList.add('is-resizing-x'); });
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizingX) return;
+            let percX = (e.clientX / window.innerWidth) * 100;
+            if (percX < 20) percX = 20; if (percX > 90) percX = 90;
+            document.documentElement.style.setProperty('--split-x', percX + '%');
+        });
+        document.addEventListener('mouseup', () => { isResizingX = false; body.classList.remove('is-resizing-x'); });
+
+        function checkLayout() {
+            if (window.innerWidth <= 700 || perfilActivo === 'escucha') return;
+
+            var signWindow = document.querySelector('.able-sign-window');
+            var transcriptWindow = document.querySelector('.able-transcript-area');
+            var player = document.getElementById('player');
+            var rX = document.getElementById('resizer-x');
+            var overlay = document.getElementById('sign-label-overlay');
+
+            if (signWindow && overlay.parentElement !== signWindow) {
+                signWindow.appendChild(overlay);
+                overlay.classList.add('visible');
+            } else if (!signWindow) {
+                overlay.classList.remove('visible');
+            }
+
+            var signHidden = !signWindow || window.getComputedStyle(signWindow).display === 'none';
+            var transHidden = !transcriptWindow || window.getComputedStyle(transcriptWindow).display === 'none';
+
+            if (signHidden && transHidden) {
+                player.classList.add('expanded');
+                rX.style.display = 'none';
+            } else {
+                player.classList.remove('expanded');
+                rX.style.display = 'flex';
+                if (!signHidden && transHidden) document.documentElement.style.setProperty('--split-y', '40%');
+                else if (signHidden && !transHidden) document.documentElement.style.setProperty('--split-y', '0%');
+                else document.documentElement.style.setProperty('--split-y', '40%');
+            }
+        }
+        setInterval(checkLayout, 500);
     </script>
 </body>
 </html>
