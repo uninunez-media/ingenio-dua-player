@@ -1,75 +1,220 @@
 <!DOCTYPE html>
-<html lang="es">
+<html class="light" lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Generador DUA</title>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Generador de Recurso Multimodal DUA</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-container": "#edeeef", "primary": "#a30019", "surface-variant": "#e1e3e4", "on-surface": "#191c1d", "surface-container-highest": "#e1e3e4", "surface": "#f8f9fa", "error-container": "#ffdad6", "error": "#ba1a1a", "surface-container-lowest": "#ffffff", "surface-container-high": "#e7e8e9", "outline": "#916f6c", "secondary": "#005eb2", "tertiary": "#00557d" }, fontFamily: { "body": ["Inter"] } } } }
+    </script>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 1rem; background: #f4f4f4; }
-        .card { background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        label { display: block; margin-top: 1rem; font-weight: bold; font-size: 0.9rem; }
-        input, select, textarea { width: 100%; padding: 0.5rem; margin-top: 0.2rem; box-sizing: border-box; }
-        .hidden { display: none; }
-        button { margin-top: 1.5rem; width: 100%; padding: 0.75rem; background: #0056b3; color: white; border: none; cursor: pointer; }
-        textarea { height: 120px; font-family: monospace; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #ce1126; border-radius: 10px; }
     </style>
 </head>
-<body>
-<div class="card">
-    <h2>Generador de Iframe DUA</h2>
-    <label>URL Base de GitHub Pages:</label>
-    <input type="text" id="baseUrl" value="https://uninunez-media.github.io/ingenio-dua-player/dua-lite.html">
+<body class="bg-surface font-body text-on-surface antialiased">
+<main class="pb-12 px-6 max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8 min-h-screen pt-6">
+    
+    <!-- Left Column: Editor Form -->
+    <section class="flex-1 space-y-8">
+        <div class="space-y-2">
+            <h1 class="text-4xl font-extrabold tracking-tight text-on-surface">Generador Multimodal DUA</h1>
+        </div>
+        
+        <div class="grid gap-6">
+            <!-- Texto -->
+            <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-primary">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">description</span>
+                    <h2 class="text-xl font-bold">Contenido Base (Texto)</h2>
+                </div>
+                <textarea id="input-texto" class="w-full bg-surface-container-high border-none rounded-lg p-4 text-sm" placeholder="Texto o URL de respaldo..."></textarea>
+            </div>
 
-    <label>Tipo de Recurso:</label>
-    <select id="tipo" onchange="toggleCampos()">
-        <option value="video">Video AblePlayer</option>
-        <option value="pdf">Documento PDF</option>
-        <option value="pagina">Recurso de Moodle</option>
-    </select>
+            <!-- Video & Señas -->
+            <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-secondary">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">movie</span>
+                    <h2 class="text-xl font-bold">Video Principal & Señas</h2>
+                </div>
+                <input id="input-video" class="w-full bg-surface-container-high border-none rounded-lg px-4 py-3 mb-6 text-sm" placeholder="URL Video (MP4, YouTube)" type="text"/>
+                
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-bold uppercase">Lengua de Señas</span>
+                    <button type="button" id="btn-add-sena" class="text-secondary text-xs font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">add</span> Añadir Idioma</button>
+                </div>
+                <div id="contenedor-senas" class="space-y-2">
+                    <!-- Los bloques de señas irán aquí -->
+                </div>
+            </div>
 
-    <div id="campos-video">
-        <label>ID YouTube Principal:</label> <input type="text" id="yt">
-        <label>ID YouTube Señas:</label> <input type="text" id="sign">
-        <label>URL .vtt Español:</label> <input type="text" id="vtt_es">
-    </div>
+            <!-- Audio -->
+            <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-tertiary">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">headphones</span>
+                    <h2 class="text-xl font-bold">Audio Principal</h2>
+                </div>
+                <input id="input-audio" class="w-full bg-surface-container-high border-none rounded-lg px-4 py-3 text-sm" placeholder="URL Audio (MP3)" type="text"/>
+            </div>
 
-    <div id="campos-src" class="hidden">
-        <label>URL del Recurso:</label> <input type="text" id="src">
-    </div>
+            <!-- Pistas de Accesibilidad -->
+            <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-outline">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-outline" style="font-variation-settings: 'FILL' 1;">universal_currency</span>
+                        <h2 class="text-xl font-bold">Pistas Alternativas (.vtt / .mp3)</h2>
+                    </div>
+                    <button type="button" id="btn-add-pista" class="text-secondary text-xs font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">add</span> Añadir Idioma</button>
+                </div>
+                <div id="contenedor-pistas" class="space-y-4">
+                    <!-- Los bloques de pistas irán aquí -->
+                </div>
+            </div>
+        </div>
 
-    <button onclick="generarIframe()">Generar</button>
-    <label>Código Moodle:</label> <textarea id="resultado" readonly></textarea>
-</div>
+        <button id="btn-generar" class="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg hover:bg-opacity-90 active:scale-95 flex items-center justify-center gap-2 shadow-md">
+            <span class="material-symbols-outlined">code_blocks</span> Generar Código Moodle
+        </button>
+    </section>
+
+    <!-- Right Column: Code & Preview -->
+    <aside class="flex-1 lg:sticky lg:top-6 h-fit space-y-6">
+        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-xl">
+            <div class="flex items-center justify-between px-4 py-3 bg-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-slate-400 text-sm">code</span>
+                    <span class="text-xs font-bold text-slate-300 uppercase">Código Iframe Generado</span>
+                </div>
+                <button id="btn-copiar" class="bg-secondary px-3 py-1 rounded text-[11px] font-bold text-white hover:bg-opacity-90 active:scale-95">Copiar</button>
+            </div>
+            <div class="p-4">
+                <textarea id="codigo-resultado" class="w-full bg-transparent border-none text-blue-300 font-mono text-sm focus:ring-0 min-h-[250px] resize-none" placeholder="El código final del iframe aparecerá aquí al presionar 'Generar Código Moodle'..." readonly></textarea>
+            </div>
+        </div>
+    </aside>
+</main>
+
 <script>
-    function toggleCampos() {
-        const tipo = document.getElementById('tipo').value;
-        document.getElementById('campos-video').classList.toggle('hidden', tipo !== 'video');
-        document.getElementById('campos-src').classList.toggle('hidden', tipo === 'video');
+document.addEventListener('DOMContentLoaded', () => {
+    // Referencias
+    const contSenas = document.getElementById('contenedor-senas');
+    const contPistas = document.getElementById('contenedor-pistas');
+    const btnAddSena = document.getElementById('btn-add-sena');
+    const btnAddPista = document.getElementById('btn-add-pista');
+    
+    // Plantillas HTML
+    const tplSena = `
+        <div class="bloque-sena flex gap-2 items-end p-3 bg-surface-container-low rounded-lg relative">
+            <div class="flex-[1]">
+                <span class="text-[10px] font-bold uppercase">Idioma</span>
+                <input type="text" class="sena-lang w-full bg-white border-none rounded-md text-sm p-2" placeholder="ej. lsc, lse, asl">
+            </div>
+            <div class="flex-[3]">
+                <span class="text-[10px] font-bold uppercase">URL Video Señas</span>
+                <input type="text" class="sena-url w-full bg-white border-none rounded-md text-sm p-2" placeholder="URL MP4">
+            </div>
+            <button type="button" class="btn-borrar p-2 text-error hover:bg-error-container rounded-md"><span class="material-symbols-outlined">delete</span></button>
+        </div>`;
+
+    const tplPista = `
+        <div class="bloque-pista bg-surface-container-low p-4 rounded-lg relative border border-surface-variant">
+            <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold uppercase">Código Idioma:</span>
+                    <input type="text" class="pista-lang w-24 bg-white border-none rounded-md text-xs p-1" placeholder="ej. es, en">
+                </div>
+                <button type="button" class="btn-borrar text-error text-xs font-bold flex items-center"><span class="material-symbols-outlined text-sm">delete</span> Borrar</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <input type="text" class="pista-sub w-full bg-white border-none rounded-md text-xs p-2" placeholder="Subtítulos (.vtt)">
+                <input type="text" class="pista-cap w-full bg-white border-none rounded-md text-xs p-2" placeholder="Capítulos (.vtt)">
+                <input type="text" class="pista-desc w-full bg-white border-none rounded-md text-xs p-2" placeholder="Descripciones (.vtt)">
+                <input type="text" class="pista-audesc w-full bg-white border-none rounded-md text-xs p-2" placeholder="Audio-descripción (.mp3)">
+            </div>
+        </div>`;
+
+    // Funciones para añadir bloques
+    btnAddSena.addEventListener('click', () => contSenas.insertAdjacentHTML('beforeend', tplSena));
+    btnAddPista.addEventListener('click', () => contPistas.insertAdjacentHTML('beforeend', tplPista));
+
+    // Delegación de eventos para borrar bloques
+    document.body.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-borrar')) {
+            e.target.closest('.bloque-sena, .bloque-pista').remove();
+        }
+    });
+
+    // Añadir un bloque de cada uno por defecto al cargar
+    btnAddSena.click();
+    btnAddPista.click();
+
+    // Función auxiliar para extraer ID de YouTube
+    function extractYouTubeID(url) {
+        const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&]{11})/);
+        return match ? match[1] : url; // Si no es URL válida, devuelve el texto tal cual por si ya es un ID
     }
 
-    function generarIframe() {
-        const baseUrl = document.getElementById('baseUrl').value; 
-        const tipo = document.getElementById('tipo').value; 
+    // Lógica del botón Generar
+    document.getElementById('btn-generar').addEventListener('click', () => {
+        let parametros = new URLSearchParams();
+
+        const videoRaw = document.getElementById('input-video').value.trim();
+        const texto = document.getElementById('input-texto').value.trim();
         
-        let urlFinal = `${baseUrl}?tipo=${tipo}`;
-        
-        if (tipo === 'video') {
-            const yt = document.getElementById('yt').value.trim();
-            const sign = document.getElementById('sign').value.trim();
-            const vtt = document.getElementById('vtt_es').value.trim();
-            
-            if (yt) urlFinal += `&yt=${yt}`; 
-            if (sign) urlFinal += `&sign=${sign}`; 
-            if (vtt) urlFinal += `&vtt_es=${encodeURIComponent(vtt)}`;
-        } else {
-            let src = document.getElementById('src').value.trim();
-            if (tipo === 'pagina' && src && !src.includes('inpopup=1')) {
-                src += (src.includes('?') ? '%26' : '?') + 'inpopup=1';
+        // Video principal
+        if (videoRaw) parametros.append('v', extractYouTubeID(videoRaw));
+
+        // Lengua de Señas (Toma la primera ingresada para AblePlayer)
+        const primerSena = document.querySelector('.bloque-sena');
+        if (primerSena) {
+            const lang = primerSena.querySelector('.sena-lang').value.trim().toUpperCase();
+            const urlSena = primerSena.querySelector('.sena-url').value.trim();
+            if (urlSena) {
+                parametros.append('sign', extractYouTubeID(urlSena));
+                if (lang) parametros.append('label', lang);
             }
-            if (src) urlFinal += `&src=${encodeURIComponent(src)}`;
         }
 
-        document.getElementById('resultado').value = `<iframe id="iframe-reproductor" src="${urlFinal}" width="100%" height="600px" style="border:none; border-radius:8px; background:#fff;" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
-    }
+        // Extraer Pistas
+        document.querySelectorAll('.bloque-pista').forEach(bloque => {
+            const lang = bloque.querySelector('.pista-lang').value.trim().toLowerCase();
+            if (!lang) return;
+
+            const sub = bloque.querySelector('.pista-sub').value.trim();
+            const cap = bloque.querySelector('.pista-cap').value.trim();
+            const desc = bloque.querySelector('.pista-desc').value.trim();
+
+            if (sub) parametros.append(`sub_${lang}`, sub);
+            if (cap) parametros.append(`cap_${lang}`, cap);
+            if (desc) parametros.append(`desc_${lang}`, desc);
+        });
+
+        // Armar Iframe final
+        const urlBase = "https://tudominio.edu.co/dua/dua-lite.html";
+        const stringParams = parametros.toString();
+        const srcFinal = stringParams ? `${urlBase}?${stringParams}` : urlBase;
+
+        const iframeCode = `<iframe id="iframe-reproductor" src="${srcFinal}" width="100%" height="600px" frameborder="0" allowfullscreen></iframe>\n\n<div class="sr-only">\n${texto}\n</div>`;
+        
+        document.getElementById('codigo-resultado').value = iframeCode;
+    });
+    
+    // Botón Copiar
+    const btnCopiar = document.getElementById('btn-copiar');
+    btnCopiar.addEventListener('click', () => {
+        const codigo = document.getElementById('codigo-resultado');
+        if (!codigo.value) return;
+        codigo.select();
+        document.execCommand('copy');
+        btnCopiar.innerText = "¡Copiado!";
+        setTimeout(() => btnCopiar.innerText = "Copiar", 2000);
+    });
+});
 </script>
 </body>
 </html>
