@@ -22,7 +22,8 @@
 <main class="pb-12 px-6 max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8 min-h-screen pt-6">
     
     <!-- COLUMNA IZQUIERDA: FORMULARIO -->
-    <section class="flex-1 space-y-8">
+<!-- Left Column: Editor Form -->
+    <section id="col-formulario" class="w-full lg:w-[400px] xl:w-[450px] flex-shrink-0 space-y-8 transition-all duration-300">
         <div class="space-y-2">
             <h1 class="text-4xl font-extrabold tracking-tight text-on-surface">Generador Multimodal DUA</h1>
         </div>
@@ -85,6 +86,9 @@
         <!-- Simulador Dinámico -->
         <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col border border-surface-variant">
             <div class="bg-surface p-2 border-b border-surface-variant flex gap-1 overflow-x-auto">
+                <button id="btn-toggle-form" class="py-2 px-3 mr-2 border border-surface-variant rounded-lg text-on-surface-variant hover:bg-surface-container font-semibold text-xs transition-all flex items-center justify-center gap-1" title="Ocultar Formulario">
+                    <span class="material-symbols-outlined text-[16px]">menu_open</span>
+                </button>
                 <button data-vista="audiovisual" class="sim-tab flex-1 min-w-[100px] py-2 px-3 rounded-lg bg-primary text-white font-bold text-xs transition-all flex items-center justify-center gap-1">
                     <span class="material-symbols-outlined text-[16px]">play_circle</span> Audiovisual
                 </button>
@@ -286,6 +290,22 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
+// --- LÓGICA PARA OCULTAR/MOSTRAR FORMULARIO ---
+    const btnToggleForm = document.getElementById('btn-toggle-form');
+    const colFormulario = document.getElementById('col-formulario');
+    const iconToggle = btnToggleForm.querySelector('.material-symbols-outlined');
+
+    btnToggleForm.onclick = () => {
+        colFormulario.classList.toggle('hidden');
+        if (colFormulario.classList.contains('hidden')) {
+            iconToggle.innerText = 'menu';
+            btnToggleForm.title = "Mostrar Formulario";
+        } else {
+            iconToggle.innerText = 'menu_open';
+            btnToggleForm.title = "Ocultar Formulario";
+        }
+    };
+    
     // --- 6. BOTÓN COPIAR ---
     btnCopiar.onclick = () => {
         if (!codigoResultado.value) return;
