@@ -181,10 +181,12 @@
         // Parámetros principales
         const videoId = params.get('v');
         const audioSrc = params.get('audio');
-        const perfilActivo = params.get('perfil') || 'audiovisual'; // audiovisual, escucha
+        const perfilActivo = params.get('perfil') || 'audiovisual';
         
         const labelOverlay = document.getElementById('sign-label-overlay');
         const playerContainer = document.getElementById('player');
+        
+        let isSimpleLayout = false; // Bandera para optimizar el layout y apagar el resizer
 
         // FUNCIÓN DE INICIO ABLEPLAYER
         function startPlayer(elementId) {
@@ -193,42 +195,39 @@
             });
         }
 
-        function init() {
-            
-            function mostrarMensajeVacio(mensaje, icono) {
-                document.body.innerHTML = `
-                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f8f9fa; font-family: sans-serif; text-align: center; padding: 20px; box-sizing: border-box;">
-                        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; max-width: 400px;">
-                            <span style="font-size: 48px; display: block; margin-bottom: 15px;">${icono}</span>
-                            <h3 style="margin: 0 0 10px 0; color: #1f2937; font-size: 18px;">Perfil no disponible</h3>
-                            <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">${mensaje}</p>
-                        </div>
-                    </div>`;
-            }
+        // --- VALIDACIÓN DE EXISTENCIA DE RECURSOS ---
+        function mostrarMensajeVacio(mensaje, icono) {
+            document.body.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f8f9fa; font-family: sans-serif; text-align: center; padding: 20px; box-sizing: border-box;">
+                    <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; max-width: 400px;">
+                        <span style="font-size: 48px; display: block; margin-bottom: 15px;">${icono}</span>
+                        <h3 style="margin: 0 0 10px 0; color: #1f2937; font-size: 18px;">Perfil no disponible</h3>
+                        <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">${mensaje}</p>
+                    </div>
+                </div>`;
+        }
 
+        // LÓGICA DE CONSTRUCCIÓN DINÁMICA
+        function init() {
             if (perfilActivo === 'audiovisual' && !videoId) {
                 mostrarMensajeVacio("El docente no ha incluido un video principal para este recurso.", "🎬");
-                return; // Detiene la ejecución, no carga AblePlayer
+                return;
             }
 
             if (perfilActivo === 'escucha' && !audioSrc && !videoId) {
                 mostrarMensajeVacio("El docente no ha incluido una versión en audio para este recurso.", "🎧");
-                return; // Detiene la ejecución
+                return;
             }
 
             let mediaElement;
             const elementId = 'media-recurso';
-            
-            // Detectar si el video es un ID de YouTube (11 caracteres) o un MP4/URL directa
             const isYouTube = videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId);
 
             // 1. Determinar si es Modo Escucha
             if (perfilActivo === 'escucha') {
-                
-                // Si no hay audio, usamos el video como salvavidas
                 const fallbackSrc = (!audioSrc && videoId) ? videoId : audioSrc;
 
-                // BLINDAJE VISUAL: Forzamos a ocultar video, señas y transcripción
+                // Blindaje visual: ocultar complementos innecesarios en modo audio
                 const style = document.createElement('style');
                 style.innerHTML = `
                     #player .able-media-container { display: none !important; }
@@ -237,15 +236,14 @@
                 document.head.appendChild(style);
 
                 if (isYouTube && !audioSrc) {
-                    // Si es YouTube, DEBE ser <video>, pero lo ocultamos visualmente
                     mediaElement = document.createElement('video');
                     mediaElement.setAttribute('data-youtube-id', videoId);
                     mediaElement.setAttribute('data-youtube-nocookie', 'true');
                 } else if (fallbackSrc) {
-                    // Si es Audio real o un MP4, usamos <audio>
                     mediaElement = document.createElement('audio');
                     const source = document.createElement('source');
                     source.src = fallbackSrc;
+                    source.type = fallbackSrc.toLowerCase().endsWith('.ogg') ? 'audio/ogg' : 'audio/mpeg';
                     mediaElement.appendChild(source);
                 }
 
@@ -253,17 +251,16 @@
                     mediaElement.id = elementId;
                     mediaElement.preload = "auto";
                     mediaElement.setAttribute('data-able-player', '');
-                    // Evitamos que AblePlayer gaste memoria construyendo la transcripción
                     mediaElement.setAttribute('data-include-transcript', 'false'); 
                 }
 
-                // Ocultar resizer y expandir el layout
                 document.getElementById('resizer-x').style.display = 'none';
                 document.documentElement.style.setProperty('--split-x', '100%');
                 document.documentElement.style.setProperty('--split-y', '100%');
-                
+                isSimpleLayout = true;
+
             } else {
-                // MODO VIDEO NORMAL (Audiovisual)
+                // MODO VIDEO NORMAL
                 mediaElement = document.createElement('video');
                 mediaElement.id = elementId;
                 mediaElement.preload = "auto";
@@ -275,11 +272,10 @@
                         mediaElement.setAttribute('data-youtube-id', videoId);
                         mediaElement.setAttribute('data-youtube-nocookie', 'true');
                     } else {
-                        mediaElement.src = videoId; // Es un MP4 directo
+                        mediaElement.src = videoId;
                     }
                 }
 
-                // Extraer y configurar Señas (Solo en modo video)
                 let signId = null;
                 let signLabelText = null;
                 for (const [key, value] of params.entries()) {
@@ -300,7 +296,9 @@
                 }
             }
 
-            // 2. Inyectar Pistas de Accesibilidad (Subtítulos, Capítulos, etc.)
+            // 2. Inyectar Pistas de Accesibilidad
+            let hasTracks = false;
+
             const getLanguageName = (code) => {
                 try {
                     const name = new Intl.DisplayNames(['es'], { type: 'language' }).of(code);
@@ -324,6 +322,7 @@
                 else if (tipo === 'desc') kind = 'descriptions';
 
                 if (kind) {
+                    hasTracks = true;
                     const track = document.createElement('track');
                     track.kind = kind;
                     track.src = value;
@@ -334,10 +333,24 @@
                 }
             }
 
+            // OPTIMIZACIÓN DE LAYOUT SIMPLE
+            if (mediaElement && mediaElement.tagName.toLowerCase() === 'video') {
+                const hasSigns = mediaElement.hasAttribute('data-youtube-sign-src');
+                if (!hasSigns && !hasTracks && perfilActivo !== 'escucha') {
+                    isSimpleLayout = true;
+                    document.getElementById('resizer-x').style.display = 'none';
+                    document.documentElement.style.setProperty('--split-x', '100%');
+                    document.documentElement.style.setProperty('--split-y', '100%');
+                    playerContainer.classList.add('expanded');
+                }
+            }
+
             // 3. Montar y Ejecutar
-            playerContainer.appendChild(mediaElement);
+            if(mediaElement) {
+                playerContainer.appendChild(mediaElement);
+            }
             
-            if (mediaElement.tagName.toLowerCase() === 'video' && mediaElement.hasAttribute('data-youtube-sign-src')) {
+            if (mediaElement && mediaElement.tagName.toLowerCase() === 'video' && mediaElement.hasAttribute('data-youtube-sign-src')) {
                 const signSrcToValidate = mediaElement.getAttribute('data-youtube-sign-src');
                 const img = new Image();
                 img.src = `https://img.youtube.com/vi/${signSrcToValidate}/mqdefault.jpg`;
@@ -346,21 +359,21 @@
                     startPlayer(elementId);
                 };
                 img.onerror = function() { startPlayer(elementId); };
-            } else {
+            } else if (mediaElement) {
                 startPlayer(elementId);
             }
         }
 
         init();
 
-        // --- TU LÓGICA DE LAYOUT & RESIZER INTACTA ---
+        // --- LÓGICA DE LAYOUT & RESIZER ---
         const resizerX = document.getElementById('resizer-x');
         const body = document.body;
         let isResizingX = false;
 
         resizerX.addEventListener('mousedown', () => { isResizingX = true; body.classList.add('is-resizing-x'); });
         document.addEventListener('mousemove', (e) => {
-            if (!isResizingX) return;
+            if (!isResizingX || isSimpleLayout) return; // Bloquea el cálculo si es layout simple
             let percX = (e.clientX / window.innerWidth) * 100;
             if (percX < 20) percX = 20; if (percX > 90) percX = 90;
             document.documentElement.style.setProperty('--split-x', percX + '%');
@@ -368,7 +381,8 @@
         document.addEventListener('mouseup', () => { isResizingX = false; body.classList.remove('is-resizing-x'); });
 
         function checkLayout() {
-            if (window.innerWidth <= 700 || perfilActivo === 'escucha') return;
+            // Si es un diseño simple o pantalla pequeña, abortar para ahorrar recursos
+            if (window.innerWidth <= 700 || isSimpleLayout) return;
 
             var signWindow = document.querySelector('.able-sign-window');
             var transcriptWindow = document.querySelector('.able-transcript-area');
