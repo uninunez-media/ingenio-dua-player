@@ -193,14 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (video) params.append('v', extractYouTubeID(video));
         if (audio) params.append('audio', audio);
 
-        // Recolectar Señas
         document.querySelectorAll('.bloque-sena').forEach(b => {
             const l = b.querySelector('.sena-lang').value.trim().toLowerCase();
             const u = b.querySelector('.sena-url').value.trim();
             if (l && u) params.append(`ls_${l}`, extractYouTubeID(u));
         });
 
-        // Recolectar Pistas
         document.querySelectorAll('.bloque-pista').forEach(b => {
             const l = b.querySelector('.pista-lang').value.trim().toLowerCase();
             if (!l) return;
@@ -213,22 +211,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlBase = "https://uninunez-media.github.io/ingenio-dua-player/dua-lite.html";
         urlGeneradaActual = `${urlBase}?${params.toString()}`;
         const urlEscucha = `${urlBase}?${params.toString()}&perfil=escucha`;
-        
-        // Crear un ID único para el iframe
         const uniqueId = 'frame_dua_' + Math.floor(Math.random() * 10000);
 
-        // Lógica del botón Lectura (solo sale si hay un PDF/URL)
+        // ESTILOS Y SVG PARA MOODLE (Idénticos al generador)
+        const svgPlay = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>`;
+        const svgAudio = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>`;
+        const svgBook = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>`;
+        
+        const styleBase = "display: flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-family: sans-serif; text-decoration: none; transition: all 0.2s; min-width: max-content;";
+        const styleActive = `${styleBase} background: #a30019; color: #ffffff; font-weight: bold; border: 1px solid #a30019; box-shadow: 0 1px 2px rgba(0,0,0,0.1);`;
+        const styleInactive = `${styleBase} background: transparent; color: #4b5563; font-weight: 600; border: 1px solid transparent;`;
+
         let botonLectura = '';
         if (texto.startsWith('http')) {
-            botonLectura = `<a href="${texto}" target="${uniqueId}" data-perfil="lectura" style="padding: 6px 12px; background: #fff; color: #333; text-decoration: none; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; font-weight: bold;">📖 Lectura</a>`;
+            botonLectura = `<a href="${texto}" target="${uniqueId}" data-perfil="lectura" style="${styleInactive}">${svgBook} Lectura</a>`;
         }
 
-        // EL CÓDIGO MAESTRO PARA MOODLE (Sin JS)
         const moodleCode = `
 <div class="dua-recurso-contenedor" style="border: 1px solid #e1e3e4; border-radius: 8px; overflow: hidden; font-family: sans-serif; background: #fff;">
-    <div style="background-color: #f8f9fa; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #e1e3e4;">
-        <a href="${urlGeneradaActual}" target="${uniqueId}" data-perfil="audiovisual" style="padding: 6px 12px; background: #a30019; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: bold;">▶️ Audiovisual</a>
-        <a href="${urlEscucha}" target="${uniqueId}" data-perfil="escucha" style="padding: 6px 12px; background: #fff; color: #333; text-decoration: none; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; font-weight: bold;">🎧 Escucha</a>
+    <div style="background-color: #f8f9fa; padding: 6px; display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid #e1e3e4;">
+        <a href="${urlGeneradaActual}" target="${uniqueId}" data-perfil="audiovisual" style="${styleActive}">${svgPlay} Audiovisual</a>
+        <a href="${urlEscucha}" target="${uniqueId}" data-perfil="escucha" style="${styleInactive}">${svgAudio} Escucha</a>
         ${botonLectura}
     </div>
 
@@ -241,8 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>`;
 
         codigoResultado.value = moodleCode.trim();
-
-        // Activar la vista previa
         previewEmpty.classList.add('hidden');
         previewContent.classList.remove('hidden');
         document.querySelector('button[data-vista="audiovisual"]').click();
