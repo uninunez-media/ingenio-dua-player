@@ -40,7 +40,7 @@
             <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-secondary">
                 <div class="flex items-center gap-3 mb-4">
                     <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">movie</span>
-                    <h2 class="text-xl font-bold">Video Principal & Señas</h2>
+                    <h2 class="text-xl font-bold">Video</h2>
                 </div>
                 <input id="input-video" class="w-full bg-surface-container-high border-none rounded-lg px-4 py-3 mb-6 text-sm" placeholder="URL Video (MP4, YouTube)" type="text"/>
                 
@@ -57,7 +57,7 @@
             <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-tertiary">
                 <div class="flex items-center gap-3 mb-4">
                     <span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">headphones</span>
-                    <h2 class="text-xl font-bold">Audio Principal</h2>
+                    <h2 class="text-xl font-bold">Audio</h2>
                 </div>
                 <input id="input-audio" class="w-full bg-surface-container-high border-none rounded-lg px-4 py-3 text-sm" placeholder="URL Audio (MP3)" type="text"/>
             </div>
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Plantillas HTML
     const tplSena = `
-        <div class="bloque-sena flex gap-2 items-end p-3 bg-surface-container-low rounded-lg relative">
+        <div class="bloque-sena flex gap-2 items-end p-3 bg-surface-container rounded-lg relative">
             <div class="flex-[1]">
                 <span class="text-[10px] font-bold uppercase">Idioma</span>
                 <input type="text" class="sena-lang w-full bg-white border-none rounded-md text-sm p-2" placeholder="ej. lsc, lse, asl">
