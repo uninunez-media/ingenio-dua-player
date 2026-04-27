@@ -213,31 +213,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlEscucha = `${urlBase}?${params.toString()}&perfil=escucha`;
         const uniqueId = 'frame_dua_' + Math.floor(Math.random() * 10000);
 
-        // ESTILOS Y SVG PARA MOODLE (Idénticos al generador)
-        const svgPlay = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>`;
-        const svgAudio = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>`;
-        const svgBook = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>`;
+// ESTILOS Y SVG PARA MOODLE (Protegidos contra CSS externo y filtros)
+        const svgStyle = 'style="width: 14px !important; height: 14px !important; min-width: 14px !important; margin: 0 !important; flex-shrink: 0;"';
         
-        const styleBase = "display: flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-family: sans-serif; text-decoration: none; transition: all 0.2s; min-width: max-content;";
-        const styleActive = `${styleBase} background: #a30019; color: #ffffff; font-weight: bold; border: 1px solid #a30019; box-shadow: 0 1px 2px rgba(0,0,0,0.1);`;
-        const styleInactive = `${styleBase} background: transparent; color: #4b5563; font-weight: 600; border: 1px solid transparent;`;
+        const svgPlay = `<svg ${svgStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>`;
+        const svgAudio = `<svg ${svgStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>`;
+        const svgBook = `<svg ${svgStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>`;
+        
+        const styleBase = "display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; padding: 6px 12px !important; border-radius: 6px !important; font-size: 12px !important; font-family: sans-serif !important; text-decoration: none !important; transition: all 0.2s !important; width: max-content !important; box-sizing: border-box !important; line-height: 1 !important; margin: 0 !important;";
+        const styleActive = `${styleBase} background: #a30019 !important; color: #ffffff !important; font-weight: bold !important; border: 1px solid #a30019 !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;`;
+        const styleInactive = `${styleBase} background: transparent !important; color: #4b5563 !important; font-weight: 600 !important; border: 1px solid transparent !important;`;
 
         let botonLectura = '';
         if (texto.startsWith('http')) {
-            botonLectura = `<a href="${texto}" target="${uniqueId}" data-perfil="lectura" style="${styleInactive}">${svgBook} Lectura</a>`;
+            botonLectura = `<a href="${texto}" target="${uniqueId}" data-perfil="lectura" class="nomediaplugin" style="${styleInactive}">${svgBook} Lectura</a>`;
         }
 
         const moodleCode = `
-<div class="dua-recurso-contenedor" style="border: 1px solid #e1e3e4; border-radius: 8px; overflow: hidden; font-family: sans-serif; background: #fff;">
-    <div style="background-color: #f8f9fa; padding: 6px; display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid #e1e3e4;">
-        <a href="${urlGeneradaActual}" target="${uniqueId}" data-perfil="audiovisual" style="${styleActive}">${svgPlay} Audiovisual</a>
-        <a href="${urlEscucha}" target="${uniqueId}" data-perfil="escucha" style="${styleInactive}">${svgAudio} Escucha</a>
+<div class="dua-recurso-contenedor" style="border: 1px solid #e1e3e4; border-radius: 8px; overflow: hidden; font-family: sans-serif; background: #fff; width: 100%; box-sizing: border-box;">
+    <div style="background-color: #f8f9fa; padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #e1e3e4; align-items: center;">
+        <a href="${urlGeneradaActual}" target="${uniqueId}" data-perfil="audiovisual" class="nomediaplugin" style="${styleActive}">${svgPlay} Audiovisual</a>
+        <a href="${urlEscucha}" target="${uniqueId}" data-perfil="escucha" class="nomediaplugin" style="${styleInactive}">${svgAudio} Escucha</a>
         ${botonLectura}
     </div>
 
-    <iframe name="${uniqueId}" src="${urlGeneradaActual}" width="100%" height="450px" frameborder="0" allow="autoplay; fullscreen; encrypted-media" allowfullscreen style="display: block;"></iframe>
+    <iframe name="${uniqueId}" src="${urlGeneradaActual}" width="100%" height="450px" frameborder="0" allow="autoplay; fullscreen; encrypted-media" allowfullscreen style="display: block; max-width: 100%;"></iframe>
     <details class="dua-detalles-texto" style="padding: 12px 15px; background: #fff; border-top: 1px solid #e1e3e4;">
-        <summary style="cursor: pointer; font-weight: bold; color: #a30019; font-size: 14px;">📄 Ver versión de texto (Bajo consumo / Accesibilidad)</summary>
+        <summary style="cursor: pointer; font-weight: bold; color: #a30019; font-size: 14px; outline: none;">📄 Ver versión de texto (Bajo consumo / Accesibilidad)</summary>
         <div style="margin-top: 12px; font-size: 14px; color: #444; line-height: 1.6; white-space: pre-wrap;">${texto && !texto.startsWith('http') ? texto : 'Resumen o texto no proporcionado.'}</div>
     </details>
 </div>`;
