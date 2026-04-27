@@ -243,17 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
             urlIframeInicial = urlGeneradaActual; // El video es la prioridad 1
         }
 
-        // Botón Escucha (Solo si hay Audio)
-        if (hasAudio) {
-            // Si NO hay video, el audio debe nacer "Activo" por defecto (color rojo)
-            let isAudioActive = !hasVideo; 
-            let currentAudioStyle = isAudioActive ? styleActive : styleInactive;
-            
-            botonesHTML += `        <a href="${urlEscucha}" target="${uniqueId}" data-perfil="escucha" class="nomediaplugin" style="${currentAudioStyle}">${svgAudio} Escucha</a>\n`;
-            
-            if (isAudioActive) urlIframeInicial = urlEscucha; // Si no hay video, el audio es la prioridad 2
-        }
-
         // Botón Lectura (Solo si hay un PDF/URL)
         if (hasLecturaURL) {
             // Si NO hay video ni audio, la lectura debe nacer "Activa"
@@ -262,8 +251,21 @@ document.addEventListener('DOMContentLoaded', () => {
             
             botonesHTML += `        <a href="${texto}" target="${uniqueId}" data-perfil="lectura" class="nomediaplugin" style="${currentLecturaStyle}">${svgBook} Lectura</a>\n`;
             
-            if (isLecturaActive) urlIframeInicial = texto; // Si no hay más nada, lectura es la prioridad 3
+            if (isLecturaActive) urlIframeInicial = texto; // Si no hay más nada, lectura es la prioridad 2
         }
+        
+        // Botón Escucha (Solo si hay Audio)
+        if (hasAudio) {
+            // Si NO hay video, el audio debe nacer "Activo" por defecto (color rojo)
+            let isAudioActive = !hasVideo; 
+            let currentAudioStyle = isAudioActive ? styleActive : styleInactive;
+            
+            botonesHTML += `        <a href="${urlEscucha}" target="${uniqueId}" data-perfil="escucha" class="nomediaplugin" style="${currentAudioStyle}">${svgAudio} Escucha</a>\n`;
+            
+            if (isAudioActive) urlIframeInicial = urlEscucha; // Si no hay video, el audio es la prioridad 3
+        }
+
+
 
         // 3. CONSTRUCCIÓN DEL CÓDIGO MOODLE FINAL
         const moodleCode = `
