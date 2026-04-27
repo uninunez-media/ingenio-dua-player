@@ -228,11 +228,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // const audioUrl = document.getElementById('audioPrincipal').value.trim();
         // const texto = document.getElementById('textoPrincipal').value.trim();
 
-        // 2. CONSTRUCCIÓN DINÁMICA DE BOTONES
+// 2. CONSTRUCCIÓN DINÁMICA DE BOTONES
         let botonesHTML = '';
-        let urlIframeInicial = ''; // Esta será la URL que cargue el iframe por defecto
-        let hasVideo = videoId !== '';
-        let hasAudio = audioUrl !== '';
+        let urlIframeInicial = ''; 
+        
+        // ¡CORRECCIÓN AQUÍ! Usamos 'video' y 'audio' que son las variables que ya declaraste arriba
+        let hasVideo = video !== ''; 
+        let hasAudio = audio !== ''; 
         let hasLecturaURL = texto.startsWith('http');
 
         // Botón Audiovisual (Solo si hay Video)
