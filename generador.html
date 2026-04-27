@@ -213,9 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlEscucha = `${urlBase}?${params.toString()}&perfil=escucha`;
         const uniqueId = 'frame_dua_' + Math.floor(Math.random() * 10000);
 
-// ESTILOS Y SVG PARA MOODLE (Protegidos contra CSS externo y filtros)
+// ESTILOS Y SVG PARA MOODLE (Mantenemos la protección contra Moodle)
         const svgStyle = 'style="width: 14px !important; height: 14px !important; min-width: 14px !important; margin: 0 !important; flex-shrink: 0;"';
-        
         const svgPlay = `<svg ${svgStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>`;
         const svgAudio = `<svg ${svgStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>`;
         const svgBook = `<svg ${svgStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>`;
@@ -224,23 +223,59 @@ document.addEventListener('DOMContentLoaded', () => {
         const styleActive = `${styleBase} background: #a30019 !important; color: #ffffff !important; font-weight: bold !important; border: 1px solid #a30019 !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;`;
         const styleInactive = `${styleBase} background: transparent !important; color: #4b5563 !important; font-weight: 600 !important; border: 1px solid transparent !important;`;
 
-        let botonLectura = '';
-        if (texto.startsWith('http')) {
-            botonLectura = `<a href="${texto}" target="${uniqueId}" data-perfil="lectura" class="nomediaplugin" style="${styleInactive}">${svgBook} Lectura</a>`;
+        // 1. ASUMIMOS LAS VARIABLES DEL FORMULARIO (ajusta los nombres si usas otros)
+        // const videoId = document.getElementById('videoPrincipal').value.trim();
+        // const audioUrl = document.getElementById('audioPrincipal').value.trim();
+        // const texto = document.getElementById('textoPrincipal').value.trim();
+
+        // 2. CONSTRUCCIÓN DINÁMICA DE BOTONES
+        let botonesHTML = '';
+        let urlIframeInicial = ''; // Esta será la URL que cargue el iframe por defecto
+        let hasVideo = videoId !== '';
+        let hasAudio = audioUrl !== '';
+        let hasLecturaURL = texto.startsWith('http');
+
+        // Botón Audiovisual (Solo si hay Video)
+        if (hasVideo) {
+            botonesHTML += `<a href="${urlGeneradaActual}" target="${uniqueId}" data-perfil="audiovisual" class="nomediaplugin" style="${styleActive}">${svgPlay} Audiovisual</a>\n`;
+            urlIframeInicial = urlGeneradaActual; // El video es la prioridad 1
         }
 
+        // Botón Escucha (Solo si hay Audio)
+        if (hasAudio) {
+            // Si NO hay video, el audio debe nacer "Activo" por defecto (color rojo)
+            let isAudioActive = !hasVideo; 
+            let currentAudioStyle = isAudioActive ? styleActive : styleInactive;
+            
+            botonesHTML += `        <a href="${urlEscucha}" target="${uniqueId}" data-perfil="escucha" class="nomediaplugin" style="${currentAudioStyle}">${svgAudio} Escucha</a>\n`;
+            
+            if (isAudioActive) urlIframeInicial = urlEscucha; // Si no hay video, el audio es la prioridad 2
+        }
+
+        // Botón Lectura (Solo si hay un PDF/URL)
+        if (hasLecturaURL) {
+            // Si NO hay video ni audio, la lectura debe nacer "Activa"
+            let isLecturaActive = !hasVideo && !hasAudio;
+            let currentLecturaStyle = isLecturaActive ? styleActive : styleInactive;
+            
+            botonesHTML += `        <a href="${texto}" target="${uniqueId}" data-perfil="lectura" class="nomediaplugin" style="${currentLecturaStyle}">${svgBook} Lectura</a>\n`;
+            
+            if (isLecturaActive) urlIframeInicial = texto; // Si no hay más nada, lectura es la prioridad 3
+        }
+
+        // 3. CONSTRUCCIÓN DEL CÓDIGO MOODLE FINAL
         const moodleCode = `
 <div class="dua-recurso-contenedor" style="border: 1px solid #e1e3e4; border-radius: 8px; overflow: hidden; font-family: sans-serif; background: #fff; width: 100%; box-sizing: border-box;">
+    
     <div style="background-color: #f8f9fa; padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #e1e3e4; align-items: center;">
-        <a href="${urlGeneradaActual}" target="${uniqueId}" data-perfil="audiovisual" class="nomediaplugin" style="${styleActive}">${svgPlay} Audiovisual</a>
-        <a href="${urlEscucha}" target="${uniqueId}" data-perfil="escucha" class="nomediaplugin" style="${styleInactive}">${svgAudio} Escucha</a>
-        ${botonLectura}
+        ${botonesHTML}
     </div>
 
-    <iframe name="${uniqueId}" src="${urlGeneradaActual}" width="100%" height="450px" frameborder="0" allow="autoplay; fullscreen; encrypted-media" allowfullscreen style="display: block; max-width: 100%;"></iframe>
+    <iframe name="${uniqueId}" src="${urlIframeInicial}" width="100%" height="450px" frameborder="0" allow="autoplay; fullscreen; encrypted-media" allowfullscreen style="display: block; max-width: 100%;"></iframe>
+    
     <details class="dua-detalles-texto" style="padding: 12px 15px; background: #fff; border-top: 1px solid #e1e3e4;">
         <summary style="cursor: pointer; font-weight: bold; color: #a30019; font-size: 14px; outline: none;">📄 Ver versión de texto (Bajo consumo / Accesibilidad)</summary>
-        <div style="margin-top: 12px; font-size: 14px; color: #444; line-height: 1.6; white-space: pre-wrap;">${texto && !texto.startsWith('http') ? texto : 'Resumen o texto no proporcionado.'}</div>
+        <div style="margin-top: 12px; font-size: 14px; color: #444; line-height: 1.6; white-space: pre-wrap;">${texto && !hasLecturaURL ? texto : 'Resumen o texto no proporcionado.'}</div>
     </details>
 </div>`;
 
