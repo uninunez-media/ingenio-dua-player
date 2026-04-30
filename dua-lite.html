@@ -282,24 +282,31 @@
                         }
                     }
                 }
-
+ 
                 const cleanSignId = signId ? signId.trim() : null;
                 const isSignYouTube = cleanSignId && /^[a-zA-Z0-9_-]{11}$/.test(cleanSignId);
                 
                 // 2. CONFIGURAR SEÑAS
+                
                 if (cleanSignId) {
+                    // 1. Limpieza de seguridad: Si la URL viene duplicada por error, tomamos solo la primera parte
+                    if (cleanSignId.includes('http') && cleanSignId.lastIndexOf('http') > 0) {
+                        cleanSignId = cleanSignId.substring(0, cleanSignId.lastIndexOf('http'));
+                    }
+
                     if (isSignYouTube) {
                         mediaElement.setAttribute('data-youtube-sign-src', cleanSignId);
                     } else {
-                        // REGLA FUNDAMENTAL: data-sign-src REQUIERE data-sign-lang
+                        // REGLAS OBLIGATORIAS PARA MP4 EXTERNO:
                         mediaElement.setAttribute('data-sign-src', cleanSignId);
-                        mediaElement.setAttribute('data-sign-lang', 'es'); // <--- ESTO ES LO QUE FALTA
-                        
-                        // Ayuda extra para el reproductor
+                        mediaElement.setAttribute('data-sign-lang', 'es'); // <--- SIN ESTO NO SALE EL BOTÓN
                         mediaElement.setAttribute('data-sign-src-type', 'video/mp4');
                     }
+                    
+                    // Configuramos el label (LSE, LSC, etc.)
                     if (signLabelText) labelOverlay.textContent = signLabelText;
                 }
+
 
                 // 3. CONFIGURAR VIDEO PRINCIPAL
                 if (videoId) {
