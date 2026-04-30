@@ -286,13 +286,19 @@
                 const cleanSignId = signId ? signId.trim() : null;
                 const isSignYouTube = cleanSignId && /^[a-zA-Z0-9_-]{11}$/.test(cleanSignId);
                 
-                // 2. CONFIGURAR SEÑAS (Directamente en el mediaElement para máxima compatibilidad)
+                // 2. CONFIGURAR SEÑAS
                 if (cleanSignId) {
                     if (isSignYouTube) {
                         mediaElement.setAttribute('data-youtube-sign-src', cleanSignId);
                     } else {
-                        // Al ponerlo aquí, AblePlayer lo encuentra aunque el video principal sea YouTube
+                        // REGLA DE ORO: data-sign-src REQUIERE data-sign-lang
                         mediaElement.setAttribute('data-sign-src', cleanSignId);
+                        mediaElement.setAttribute('data-sign-lang', 'es'); // <--- Esto activa el botón
+                        
+                        // Opcional: Ayuda al navegador a saber qué tipo de archivo es
+                        if (cleanSignId.toLowerCase().endsWith('.mp4')) {
+                            mediaElement.setAttribute('data-sign-src-type', 'video/mp4');
+                        }
                     }
                     if (signLabelText) labelOverlay.textContent = signLabelText;
                 }
@@ -368,21 +374,25 @@
                 }
             }
 
-            // 3. Montar y Ejecutar
+           // 3. Montar y Ejecutar
             if(mediaElement) {
                 playerContainer.appendChild(mediaElement);
             }
             
-            if (mediaElement && mediaElement.tagName.toLowerCase() === 'video' && mediaElement.hasAttribute('data-youtube-sign-src')) {
+            // Si hay señas de YouTube, validamos que el video exista (ID correcto)
+            if (mediaElement && mediaElement.hasAttribute('data-youtube-sign-src')) {
                 const signSrcToValidate = mediaElement.getAttribute('data-youtube-sign-src');
                 const img = new Image();
                 img.src = `https://img.youtube.com/vi/${signSrcToValidate}/mqdefault.jpg`;
                 img.onload = function() {
+                    // Si YouTube devuelve la imagen de "no encontrado" (120px ancho), quitamos el atributo
                     if (this.width === 120) mediaElement.removeAttribute('data-youtube-sign-src');
                     startPlayer(elementId);
                 };
                 img.onerror = function() { startPlayer(elementId); };
-            } else if (mediaElement) {
+            } 
+            // Si NO es señas de YouTube (es MP4 o no hay señas), iniciamos directo
+            else if (mediaElement) {
                 startPlayer(elementId);
             }
         }
