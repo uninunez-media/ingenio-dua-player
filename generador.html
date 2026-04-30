@@ -16,6 +16,14 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #ce1126; border-radius: 10px; }
         #preview-canvas iframe { border-radius: 8px; border: 1px solid #ddd; }
+        /* Modo por Defecto radio cards */
+        .pdef-card { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; transition: all 0.15s; background: #f9fafb; }
+        .pdef-card:hover { border-color: #d1d5db; background: #f3f4f6; }
+        .pdef-card.pdef-active { border-color: #a30019; background: #fff5f6; }
+        .pdef-card .pdef-icon { color: #9ca3af; transition: color 0.15s; }
+        .pdef-card .pdef-label { color: #4b5563; transition: color 0.15s; }
+        .pdef-card.pdef-active .pdef-icon,
+        .pdef-card.pdef-active .pdef-label { color: #a30019; }
     </style>
 </head>
 <body class="bg-surface font-body text-on-surface antialiased">
@@ -30,9 +38,35 @@
             <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-primary">
                 <div class="flex items-center gap-3 mb-4">
                     <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">description</span>
-                    <h2 class="text-xl font-bold">Contenido Base (Texto)</h2>
+                    <h2 class="text-xl font-bold">Contenido Base</h2>
                 </div>
-                <textarea id="input-texto" class="w-full bg-surface-container-high border-none rounded-lg p-4 text-sm" placeholder="Resumen o texto para el lector de pantalla..."></textarea>
+
+                <!-- Campo Documento (para perfil Lectura) -->
+                <div class="mb-5">
+                    <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-on-surface mb-1.5">
+                        <span class="material-symbols-outlined text-[15px] text-primary">picture_as_pdf</span>
+                        Documento / Recurso — Perfil Lectura
+                    </label>
+                    <input id="input-doc" type="text" class="w-full bg-surface-container-high border-none rounded-lg px-4 py-3 text-sm" placeholder="URL de PDF, recurso Moodle u otro documento…"/>
+                    <p class="text-[11px] text-gray-400 mt-1.5 leading-relaxed">Acepta URLs externas o internas de Moodle<br>(ej. <code class="bg-gray-100 px-1 rounded">/mod/resource/view.php?id=123</code> o URL completa)</p>
+                </div>
+
+                <!-- Divisor -->
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="h-px flex-1 bg-surface-variant"></div>
+                    <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Texto</span>
+                    <div class="h-px flex-1 bg-surface-variant"></div>
+                </div>
+
+                <!-- Campo Texto Bajo Consumo -->
+                <div>
+                    <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-on-surface mb-1.5">
+                        <span class="material-symbols-outlined text-[15px] text-primary">bolt</span>
+                        Texto de Bajo Consumo - Accesibilidad
+                    </label>
+                    <textarea id="input-texto-bc" rows="4" class="w-full bg-surface-container-high border-none rounded-lg p-4 text-sm" placeholder="Resumen o texto accesible para conexiones lentas y lectores de pantalla…"></textarea>
+                    <p class="text-[11px] text-gray-400 mt-1.5">Visible sin cargar video ni audio. También usado por el perfil <strong>Bajo Consumo</strong>.</p>
+                </div>
             </div>
 
             <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-secondary">
@@ -69,6 +103,37 @@
             </div>
         </div>
 
+            <!-- Modo por Defecto -->
+            <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-secondary">
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">tune</span>
+                    <h2 class="text-xl font-bold">Modo por Defecto</h2>
+                </div>
+                <p class="text-xs text-gray-500 mb-4 leading-relaxed">Si la preferencia guardada del usuario <strong>no está disponible</strong> en este recurso, se cargará este perfil automáticamente.</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="pdef-card pdef-active" data-pdef="audiovisual">
+                        <input type="radio" name="perfil-defecto" value="audiovisual" checked class="sr-only">
+                        <span class="material-symbols-outlined pdef-icon text-[17px]">play_circle</span>
+                        <span class="pdef-label text-sm font-semibold">Audiovisual</span>
+                    </label>
+                    <label class="pdef-card" data-pdef="lectura">
+                        <input type="radio" name="perfil-defecto" value="lectura" class="sr-only">
+                        <span class="material-symbols-outlined pdef-icon text-[17px]">auto_stories</span>
+                        <span class="pdef-label text-sm font-semibold">Lectura</span>
+                    </label>
+                    <label class="pdef-card" data-pdef="escucha">
+                        <input type="radio" name="perfil-defecto" value="escucha" class="sr-only">
+                        <span class="material-symbols-outlined pdef-icon text-[17px]">headphones</span>
+                        <span class="pdef-label text-sm font-semibold">Escucha</span>
+                    </label>
+                    <label class="pdef-card" data-pdef="bajoconsumo">
+                        <input type="radio" name="perfil-defecto" value="bajoconsumo" class="sr-only">
+                        <span class="material-symbols-outlined pdef-icon text-[17px]">bolt</span>
+                        <span class="pdef-label text-sm font-semibold">Bajo Consumo</span>
+                    </label>
+                </div>
+            </div>
+
         <button id="btn-generar" class="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg hover:bg-opacity-90 active:scale-95 flex items-center justify-center gap-2 shadow-md">
             <span class="material-symbols-outlined">code_blocks</span> Generar Código Moodle
         </button>
@@ -91,7 +156,7 @@
                     <span class="material-symbols-outlined text-[14px]">headphones</span> Escucha
                 </button>
                 <button data-vista="bajoconsumo" class="sim-tab flex-1 min-w-max py-1 px-2 rounded-md bg-transparent text-on-surface-variant hover:bg-surface-container font-semibold text-[11px] transition-all flex items-center justify-center gap-1">
-                    <span class="material-symbols-outlined text-[14px]">bolt</span> Ligero
+                    <span class="material-symbols-outlined text-[14px]">bolt</span> Bajo Consumo
                 </button>
             </div>
 
@@ -184,26 +249,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 4. LÓGICA DEL BOTÓN GENERAR ---
+// --- 4. LÓGICA DEL BOTÓN GENERAR ---
     document.getElementById('btn-generar').onclick = () => {
         let params = new URLSearchParams();
-        const video = document.getElementById('input-video').value.trim();
-        const audio = document.getElementById('input-audio').value.trim();
-        const texto = document.getElementById('input-texto').value.trim();
+        
+        // 1. LECTURA SEGURA (El signo "?" evita que el código se rompa si un ID cambia)
+        const video = document.getElementById('input-video')?.value.trim() || '';
+        const audio = document.getElementById('input-audio')?.value.trim() || '';
+        const docUrl = document.getElementById('input-doc')?.value.trim() || '';
+        const textoBC = document.getElementById('input-texto-bc')?.value.trim() || '';
+        
+        const radioDefecto = document.querySelector('input[name="perfil-defecto"]:checked');
+        const perfilDefecto = radioDefecto ? radioDefecto.value : 'audiovisual';
         
         if (video) params.append('v', extractYouTubeID(video));
         if (audio) params.append('audio', audio);
 
         document.querySelectorAll('.bloque-sena').forEach(b => {
-            const l = b.querySelector('.sena-lang').value.trim().toLowerCase();
-            const u = b.querySelector('.sena-url').value.trim();
+            const l = b.querySelector('.sena-lang')?.value.trim().toLowerCase() || '';
+            const u = b.querySelector('.sena-url')?.value.trim() || '';
             if (l && u) params.append(`ls_${l}`, extractYouTubeID(u));
         });
 
         document.querySelectorAll('.bloque-pista').forEach(b => {
-            const l = b.querySelector('.pista-lang').value.trim().toLowerCase();
+            const l = b.querySelector('.pista-lang')?.value.trim().toLowerCase() || '';
             if (!l) return;
             ['sub', 'cap', 'desc', 'audesc'].forEach(t => {
-                const v = b.querySelector(`.pista-${t}`).value.trim();
+                const v = b.querySelector(`.pista-${t}`)?.value.trim() || '';
                 if (v) params.append(`${t}_${l}`, v);
             });
         });
@@ -213,82 +285,97 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlEscucha = `${urlBase}?${params.toString()}&perfil=escucha`;
         const uniqueId = 'frame_dua_' + Math.floor(Math.random() * 10000);
 
-// ESTILOS Y SVG PARA MOODLE (Mantenemos la protección contra Moodle)
         const svgStyle = 'style="width: 14px !important; height: 14px !important; min-width: 14px !important; margin: 0 !important; flex-shrink: 0;"';
         const svgPlay = `<svg ${svgStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>`;
         const svgAudio = `<svg ${svgStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>`;
         const svgBook = `<svg ${svgStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>`;
+        const svgBolt = `<svg ${svgStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
         
         const styleBase = "display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; padding: 6px 12px !important; border-radius: 6px !important; font-size: 12px !important; font-family: sans-serif !important; text-decoration: none !important; transition: all 0.2s !important; width: max-content !important; box-sizing: border-box !important; line-height: 1 !important; margin: 0 !important;";
         const styleActive = `${styleBase} background: #a30019 !important; color: #ffffff !important; font-weight: bold !important; border: 1px solid #a30019 !important; box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;`;
         const styleInactive = `${styleBase} background: transparent !important; color: #4b5563 !important; font-weight: 600 !important; border: 1px solid transparent !important;`;
 
-        // 1. ASUMIMOS LAS VARIABLES DEL FORMULARIO (ajusta los nombres si usas otros)
-        // const videoId = document.getElementById('videoPrincipal').value.trim();
-        // const audioUrl = document.getElementById('audioPrincipal').value.trim();
-        // const texto = document.getElementById('textoPrincipal').value.trim();
+        const hasVideo = video !== '';
+        const hasAudio = audio !== '';
+        const hasLecturaURL = docUrl !== '';
+        const hasTextoBC = textoBC !== '';
 
-// 2. CONSTRUCCIÓN DINÁMICA DE BOTONES
+        const perfilesDisponibles = [];
+        if (hasVideo) perfilesDisponibles.push('audiovisual');
+        if (hasLecturaURL) perfilesDisponibles.push('lectura');
+        if (hasAudio) perfilesDisponibles.push('escucha');
+        if (hasTextoBC) perfilesDisponibles.push('bajoconsumo');
+
+        const perfilDefectoEfectivo = perfilesDisponibles.includes(perfilDefecto)
+            ? perfilDefecto
+            : (perfilesDisponibles[0] || 'audiovisual');
+
+        // 2. CREACIÓN DE BOTONES
         let botonesHTML = '';
-        let urlIframeInicial = ''; 
-        
-        // ¡CORRECCIÓN AQUÍ! Usamos 'video' y 'audio' que son las variables que ya declaraste arriba
-        let hasVideo = video !== ''; 
-        let hasAudio = audio !== ''; 
-        let hasLecturaURL = texto.startsWith('http');
-
-        // Botón Audiovisual (Solo si hay Video)
         if (hasVideo) {
-            botonesHTML += `<a href="${urlGeneradaActual}" target="${uniqueId}" data-perfil="audiovisual" class="nomediaplugin" style="${styleActive}">${svgPlay} Audiovisual</a>\n`;
-            urlIframeInicial = urlGeneradaActual; // El video es la prioridad 1
+            const active = perfilDefectoEfectivo === 'audiovisual';
+            botonesHTML += `<a href="${urlGeneradaActual}" target="${uniqueId}" data-perfil="audiovisual" class="nomediaplugin" style="${active ? styleActive : styleInactive}">${svgPlay} Audiovisual</a>\n`;
         }
-
-        // Botón Lectura (Solo si hay un PDF/URL)
         if (hasLecturaURL) {
-            // Si NO hay video ni audio, la lectura debe nacer "Activa"
-            let isLecturaActive = !hasVideo && !hasAudio;
-            let currentLecturaStyle = isLecturaActive ? styleActive : styleInactive;
-            
-            botonesHTML += `        <a href="${texto}" target="${uniqueId}" data-perfil="lectura" class="nomediaplugin" style="${currentLecturaStyle}">${svgBook} Lectura</a>\n`;
-            
-            if (isLecturaActive) urlIframeInicial = texto; // Si no hay más nada, lectura es la prioridad 2
+            const active = perfilDefectoEfectivo === 'lectura';
+            botonesHTML += `        <a href="${docUrl}" target="${uniqueId}" data-perfil="lectura" class="nomediaplugin" style="${active ? styleActive : styleInactive}">${svgBook} Lectura</a>\n`;
         }
-        
-        // Botón Escucha (Solo si hay Audio)
         if (hasAudio) {
-            // Si NO hay video, el audio debe nacer "Activo" por defecto (color rojo)
-            let isAudioActive = !hasVideo; 
-            let currentAudioStyle = isAudioActive ? styleActive : styleInactive;
-            
-            botonesHTML += `        <a href="${urlEscucha}" target="${uniqueId}" data-perfil="escucha" class="nomediaplugin" style="${currentAudioStyle}">${svgAudio} Escucha</a>\n`;
-            
-            if (isAudioActive) urlIframeInicial = urlEscucha; // Si no hay video, el audio es la prioridad 3
+            const active = perfilDefectoEfectivo === 'escucha';
+            botonesHTML += `        <a href="${urlEscucha}" target="${uniqueId}" data-perfil="escucha" class="nomediaplugin" style="${active ? styleActive : styleInactive}">${svgAudio} Escucha</a>\n`;
+        }
+        if (hasTextoBC) {
+            const active = perfilDefectoEfectivo === 'bajoconsumo';
+            // El botón de bajo consumo no recarga el iframe, hace scroll al texto
+            botonesHTML += `        <a href="#txt-${uniqueId}" data-perfil="bajoconsumo" class="nomediaplugin" style="${active ? styleActive : styleInactive}">${svgBolt} Bajo Consumo</a>\n`;
         }
 
+        // 3. SELECCIÓN DE IFRAME INICIAL
+        let urlIframeInicial = '';
+        if (perfilDefectoEfectivo === 'audiovisual' && hasVideo) urlIframeInicial = urlGeneradaActual;
+        else if (perfilDefectoEfectivo === 'escucha' && hasAudio) urlIframeInicial = urlEscucha;
+        else if (perfilDefectoEfectivo === 'lectura' && hasLecturaURL) urlIframeInicial = docUrl;
+        else {
+            // Si el perfil por defecto es "Bajo Consumo", igual precargamos el mejor recurso en el iframe
+            if (hasVideo) urlIframeInicial = urlGeneradaActual;
+            else if (hasAudio) urlIframeInicial = urlEscucha;
+            else if (hasLecturaURL) urlIframeInicial = docUrl;
+        }
 
+        const iframeMostrar = urlIframeInicial !== '';
 
-        // 3. CONSTRUCCIÓN DEL CÓDIGO MOODLE FINAL
+        // 4. CONSTRUCCIÓN DEL CÓDIGO MOODLE FINAL (Con CSS en línea para Moodle)
         const moodleCode = `
-<div class="dua-recurso-contenedor" style="border: 1px solid #e1e3e4; border-radius: 8px; overflow: hidden; font-family: sans-serif; background: #fff; width: 100%; box-sizing: border-box;">
+<div class="dua-recurso-contenedor" id="txt-${uniqueId}" data-perfil-defecto="${perfilDefectoEfectivo}" style="border: 1px solid #e1e3e4; border-radius: 8px; overflow: hidden; font-family: sans-serif; background: #fff; width: 100%; box-sizing: border-box;">
     
     <div style="background-color: #f8f9fa; padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #e1e3e4; align-items: center;">
         ${botonesHTML}
     </div>
 
-    <iframe name="${uniqueId}" src="${urlIframeInicial}" width="100%" height="450px" frameborder="0" allow="autoplay; fullscreen; encrypted-media" allowfullscreen style="display: block; max-width: 100%;"></iframe>
+    ${iframeMostrar ? `<iframe name="${uniqueId}" src="${urlIframeInicial}" width="100%" height="450px" frameborder="0" allow="autoplay; fullscreen; encrypted-media" allowfullscreen style="display: block; max-width: 100%;"></iframe>` : ''}
     
-    <details class="dua-detalles-texto" style="padding: 12px 15px; background: #fff; border-top: 1px solid #e1e3e4;">
+    <details class="dua-detalles-texto" ${perfilDefectoEfectivo === 'bajoconsumo' ? 'open' : ''} style="padding: 12px 15px; background: #fff; border-top: 1px solid #e1e3e4;">
         <summary style="cursor: pointer; font-weight: bold; color: #a30019; font-size: 14px; outline: none;">📄 Ver versión de texto (Bajo consumo / Accesibilidad)</summary>
-        <div style="margin-top: 12px; font-size: 14px; color: #444; line-height: 1.6; white-space: pre-wrap;">${texto && !hasLecturaURL ? texto : 'Resumen o texto no proporcionado.'}</div>
+        
+        <div style="background-color: #fff7ed; border: 1px solid #fed7aa; padding: 12px; border-radius: 6px; margin-top: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <p style="margin: 0; font-size: 12px; font-weight: bold; color: #9a3412;">Modo ahorro de datos activo</p>
+        </div>
+
+        <div style="padding: 16px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; color: #6b7280; line-height: 1.6; white-space: pre-wrap; overflow-y: auto; max-height: 350px;">${hasTextoBC ? textoBC : 'Texto no proporcionado.'}</div>
     </details>
 </div>`;
 
         codigoResultado.value = moodleCode.trim();
         previewEmpty.classList.add('hidden');
         previewContent.classList.remove('hidden');
-        document.querySelector('button[data-vista="audiovisual"]').click();
+        
+        // Simular click en la pestaña visual adecuada
+        const tabToClick = document.querySelector(`.sim-tab[data-vista="${perfilDefectoEfectivo}"]`);
+        if(tabToClick) tabToClick.click();
     };
-
+  
+  
     // --- LÓGICA DE LAS PESTAÑAS DEL SIMULADOR ---
     tabs.forEach(tab => {
         tab.onclick = (e) => {
@@ -303,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!urlGeneradaActual) return;
             const vista = e.currentTarget.getAttribute('data-vista');
-            const textoInput = document.getElementById('input-texto').value.trim();
+
 
             if (vista === 'audiovisual') {
                 previewContent.innerHTML = `<iframe src="${urlGeneradaActual}" width="100%" height="450px" frameborder="0" allowfullscreen></iframe>`;
@@ -314,15 +401,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 previewContent.innerHTML = `<iframe src="${urlAudio.href}" width="100%" height="450px" frameborder="0" allowfullscreen></iframe>`;
             }
             else if (vista === 'lectura') {
-                if (!textoInput) {
+                const docUrlInput = document.getElementById('input-doc').value.trim();
+                if (!docUrlInput) {
                     previewContent.innerHTML = `
                         <div class="flex-1 flex flex-col items-center justify-center p-6 text-center h-full bg-white rounded-lg border">
                             <span class="material-symbols-outlined text-5xl text-gray-300 mb-4">auto_stories</span>
                             <h3 class="text-lg font-bold text-gray-700">Perfil no disponible</h3>
-                            <p class="text-sm text-gray-500 max-w-sm mt-2">No se ha ingresado un documento o texto base para la vista de lectura.</p>
+                            <p class="text-sm text-gray-500 max-w-sm mt-2">No se ha ingresado un documento o URL para la vista de lectura.</p>
                         </div>`;
-                }
-                else if (textoInput.startsWith('http')) {
+                } else {
                     previewContent.innerHTML = `
                         <div class="w-full bg-white rounded-lg border flex flex-col overflow-hidden">
                             <div class="p-3 bg-blue-50 text-blue-900 text-sm border-b flex justify-between items-center" role="alert">
@@ -330,27 +417,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <span class="material-symbols-outlined">accessibility_new</span> 
                                     ¿Usas lector de pantalla?
                                 </span>
-                                <a href="${textoInput}" target="_blank" aria-label="Abrir documento en nueva pestaña" class="bg-blue-600 text-white px-4 py-1.5 rounded font-bold hover:bg-blue-700 transition-colors">Abrir Documento</a>
+                                <a href="${docUrlInput}" target="_blank" aria-label="Abrir documento en nueva pestaña" class="bg-blue-600 text-white px-4 py-1.5 rounded font-bold hover:bg-blue-700 transition-colors">Abrir Documento</a>
                             </div>
-                            <object data="${textoInput}" type="application/pdf" width="100%" style="height: 70vh; min-height: 600px;" title="Documento de lectura">
-                                <iframe src="${textoInput}" width="100%" style="height: 70vh; min-height: 600px;" title="Documento de lectura"></iframe>
-                            </object>
-                        </div>`;
-                } else {
-                    previewContent.innerHTML = `
-                        <div class="bg-white p-8 rounded border h-full overflow-y-auto" tabindex="0">
-                            <h2 class="text-2xl font-bold mb-4 text-primary">Contenido de Lectura</h2>
-                            <p class="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">${textoInput}</p>
+                            <iframe src="${docUrlInput}" width="100%" style="height: 70vh; min-height: 400px;" title="Documento de lectura" frameborder="0"></iframe>
                         </div>`;
                 }
             }
             else if (vista === 'bajoconsumo') {
-                if (!textoInput) {
+                const textoBCInput = document.getElementById('input-texto-bc').value.trim();
+                console.log("Texto Bajo Consumo:", textoBCInput);
+                if (!textoBCInput) {
                     previewContent.innerHTML = `
                         <div class="flex-1 flex flex-col items-center justify-center p-6 text-center h-full bg-white rounded-lg border">
                             <span class="material-symbols-outlined text-5xl text-gray-300 mb-4">bolt</span>
                             <h3 class="text-lg font-bold text-gray-700">Perfil no disponible</h3>
-                            <p class="text-sm text-gray-500 max-w-sm mt-2">No se ha ingresado texto para generar la versión de bajo consumo.</p>
+                            <p class="text-sm text-gray-500 max-w-sm mt-2">No se ha ingresado texto para la versión de bajo consumo.</p>
                         </div>`;
                 } else {
                     previewContent.innerHTML = `
@@ -359,11 +440,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p class="text-xs font-bold text-orange-800">Modo ahorro de datos activo</p>
                         </div>
                         <div class="bg-white p-4 rounded border flex-1 text-gray-500 text-sm overflow-y-auto">
-                            <p>${textoInput}</p>
+                            <p>${textoBCInput}</p>
                         </div>`;
                 }
             }
         };
+    });
+
+    // --- RADIO CARDS MODO POR DEFECTO ---
+    document.querySelectorAll('.pdef-card').forEach(label => {
+        label.addEventListener('click', () => {
+            document.querySelectorAll('.pdef-card').forEach(l => l.classList.remove('pdef-active'));
+            label.classList.add('pdef-active');
+        });
     });
 
     // --- LÓGICA PARA OCULTAR/MOSTRAR FORMULARIO ---
