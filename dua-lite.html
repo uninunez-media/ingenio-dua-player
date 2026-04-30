@@ -269,7 +269,7 @@
                 let signId = null;
                 let signLabelText = null;
                 
-                // 1. Extraer la preferencia de señas
+                // 1. Identificar si hay video de señas
                 if (prefSena && params.get(`ls_${prefSena}`)) {
                     signId = params.get(`ls_${prefSena}`);
                     signLabelText = prefSena.toUpperCase();
@@ -286,39 +286,28 @@
                 const cleanSignId = signId ? signId.trim() : null;
                 const isSignYouTube = cleanSignId && /^[a-zA-Z0-9_-]{11}$/.test(cleanSignId);
                 
-                // 2. Construir el video principal y enlazar las señas
+                // 2. CONFIGURAR SEÑAS (Directamente en el mediaElement para máxima compatibilidad)
+                if (cleanSignId) {
+                    if (isSignYouTube) {
+                        mediaElement.setAttribute('data-youtube-sign-src', cleanSignId);
+                    } else {
+                        // Al ponerlo aquí, AblePlayer lo encuentra aunque el video principal sea YouTube
+                        mediaElement.setAttribute('data-sign-src', cleanSignId);
+                    }
+                    if (signLabelText) labelOverlay.textContent = signLabelText;
+                }
+
+                // 3. CONFIGURAR VIDEO PRINCIPAL
                 if (videoId) {
                     if (isYouTube) {
-                        // --- CASO YOUTUBE ---
-                        // (YouTube NO lleva atributo crossorigin ni etiquetas source)
+                        // CASO: PRINCIPAL YOUTUBE
                         mediaElement.setAttribute('data-youtube-id', videoId);
-                        
-                        if (cleanSignId) {
-                            if (isSignYouTube) {
-                                mediaElement.setAttribute('data-youtube-sign-src', cleanSignId);
-                            } else {
-                                mediaElement.setAttribute('data-sign-src', cleanSignId);
-                            }
-                            if (signLabelText) labelOverlay.textContent = signLabelText;
-                        }
                     } else {
-                        // --- CASO MP4 DIRECTO ---
-                        // (Los MP4 SÍ requieren crossorigin para que funcionen los subtítulos)
+                        // CASO: PRINCIPAL MP4
                         mediaElement.setAttribute('crossorigin', 'anonymous');
-                        
                         const source = document.createElement('source');
                         source.src = videoId;
                         source.type = videoId.toLowerCase().endsWith('.webm') ? 'video/webm' : 'video/mp4';
-                        
-                        if (cleanSignId) {
-                            if (isSignYouTube) {
-                                mediaElement.setAttribute('data-youtube-sign-src', cleanSignId);
-                            } else {
-                                source.setAttribute('data-sign-src', cleanSignId); // Regla nativa de AblePlayer
-                            }
-                            if (signLabelText) labelOverlay.textContent = signLabelText;
-                        }
-                        
                         mediaElement.appendChild(source);
                     }
                 }
@@ -364,10 +353,11 @@
                 }
             }
             
-            // OPTIMIZACIÓN DE LAYOUT SIMPLE
+// OPTIMIZACIÓN DE LAYOUT SIMPLE
             if (mediaElement && mediaElement.tagName.toLowerCase() === 'video') {
-                const sourceConSenas = mediaElement.querySelector('source[data-sign-src]');
-                const hasSigns = mediaElement.hasAttribute('data-youtube-sign-src') || mediaElement.hasAttribute('data-sign-src') || sourceConSenas !== null;
+                // Verificamos si el elemento tiene atributos de señas (YT o MP4)
+                const hasSigns = mediaElement.hasAttribute('data-youtube-sign-src') || 
+                                 mediaElement.hasAttribute('data-sign-src');
                 
                 if (!hasSigns && !hasTracks && perfilActivo !== 'escucha') {
                     isSimpleLayout = true;
