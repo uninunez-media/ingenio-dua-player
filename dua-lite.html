@@ -263,14 +263,13 @@
                 mediaElement = document.createElement('video');
                 mediaElement.id = elementId;
                 mediaElement.preload = "auto";
-                mediaElement.setAttribute('crossorigin', 'anonymous');
                 mediaElement.setAttribute('playsinline', '');
                 
                 const prefSena = params.get('pref_sena');
                 let signId = null;
                 let signLabelText = null;
                 
-                // 1. Extraer la preferencia de señas primero
+                // 1. Extraer la preferencia de señas
                 if (prefSena && params.get(`ls_${prefSena}`)) {
                     signId = params.get(`ls_${prefSena}`);
                     signLabelText = prefSena.toUpperCase();
@@ -290,31 +289,32 @@
                 // 2. Construir el video principal y enlazar las señas
                 if (videoId) {
                     if (isYouTube) {
+                        // --- CASO YOUTUBE ---
+                        // (YouTube NO lleva atributo crossorigin ni etiquetas source)
                         mediaElement.setAttribute('data-youtube-id', videoId);
                         
-                        // Si el principal es YT, y hay señas
                         if (cleanSignId) {
                             if (isSignYouTube) {
                                 mediaElement.setAttribute('data-youtube-sign-src', cleanSignId);
                             } else {
-                                // Opcional: Si el principal es YT y las señas son MP4
                                 mediaElement.setAttribute('data-sign-src', cleanSignId);
                             }
                             if (signLabelText) labelOverlay.textContent = signLabelText;
                         }
                     } else {
-                        // AQUÍ ESTÁ TU CORRECCIÓN: Usar <source> para el video principal (MP4)
+                        // --- CASO MP4 DIRECTO ---
+                        // (Los MP4 SÍ requieren crossorigin para que funcionen los subtítulos)
+                        mediaElement.setAttribute('crossorigin', 'anonymous');
+                        
                         const source = document.createElement('source');
                         source.src = videoId;
                         source.type = videoId.toLowerCase().endsWith('.webm') ? 'video/webm' : 'video/mp4';
                         
                         if (cleanSignId) {
                             if (isSignYouTube) {
-                                // Principal MP4 + Señas de YouTube
                                 mediaElement.setAttribute('data-youtube-sign-src', cleanSignId);
                             } else {
-                                // Principal MP4 + Señas MP4 (¡LA REGLA OFICIAL DE ABLEPLAYER!)
-                                source.setAttribute('data-sign-src', cleanSignId);
+                                source.setAttribute('data-sign-src', cleanSignId); // Regla nativa de AblePlayer
                             }
                             if (signLabelText) labelOverlay.textContent = signLabelText;
                         }
