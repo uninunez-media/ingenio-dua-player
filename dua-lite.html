@@ -266,20 +266,11 @@
                 mediaElement.setAttribute('crossorigin', 'anonymous');
                 mediaElement.setAttribute('playsinline', '');
                 
-                if (videoId) {
-                    if (isYouTube) {
-                        mediaElement.setAttribute('data-youtube-id', videoId);
-                        //mediaElement.setAttribute('data-youtube-nocookie', 'true');
-                    } else {
-                        mediaElement.src = videoId;
-                    }
-                }
-
                 const prefSena = params.get('pref_sena');
                 let signId = null;
                 let signLabelText = null;
                 
-                // Preferencia de señas
+                // 1. Extraer la preferencia de señas primero
                 if (prefSena && params.get(`ls_${prefSena}`)) {
                     signId = params.get(`ls_${prefSena}`);
                     signLabelText = prefSena.toUpperCase();
@@ -293,12 +284,42 @@
                     }
                 }
 
-                if (signId) {
-                    const cleanSignId = signId.trim();
-                    const youtubeRegex = /^[a-zA-Z0-9_-]{11}$/;
-                    if (youtubeRegex.test(cleanSignId)) {
-                        mediaElement.setAttribute('data-youtube-sign-src', cleanSignId);
-                        if (signLabelText) labelOverlay.textContent = signLabelText;
+                const cleanSignId = signId ? signId.trim() : null;
+                const isSignYouTube = cleanSignId && /^[a-zA-Z0-9_-]{11}$/.test(cleanSignId);
+                
+                // 2. Construir el video principal y enlazar las señas
+                if (videoId) {
+                    if (isYouTube) {
+                        mediaElement.setAttribute('data-youtube-id', videoId);
+                        
+                        // Si el principal es YT, y hay señas
+                        if (cleanSignId) {
+                            if (isSignYouTube) {
+                                mediaElement.setAttribute('data-youtube-sign-src', cleanSignId);
+                            } else {
+                                // Opcional: Si el principal es YT y las señas son MP4
+                                mediaElement.setAttribute('data-sign-src', cleanSignId);
+                            }
+                            if (signLabelText) labelOverlay.textContent = signLabelText;
+                        }
+                    } else {
+                        // AQUÍ ESTÁ TU CORRECCIÓN: Usar <source> para el video principal (MP4)
+                        const source = document.createElement('source');
+                        source.src = videoId;
+                        source.type = videoId.toLowerCase().endsWith('.webm') ? 'video/webm' : 'video/mp4';
+                        
+                        if (cleanSignId) {
+                            if (isSignYouTube) {
+                                // Principal MP4 + Señas de YouTube
+                                mediaElement.setAttribute('data-youtube-sign-src', cleanSignId);
+                            } else {
+                                // Principal MP4 + Señas MP4 (¡LA REGLA OFICIAL DE ABLEPLAYER!)
+                                source.setAttribute('data-sign-src', cleanSignId);
+                            }
+                            if (signLabelText) labelOverlay.textContent = signLabelText;
+                        }
+                        
+                        mediaElement.appendChild(source);
                     }
                 }
             }
@@ -342,10 +363,12 @@
                     mediaElement.appendChild(track);
                 }
             }
-
+            
             // OPTIMIZACIÓN DE LAYOUT SIMPLE
             if (mediaElement && mediaElement.tagName.toLowerCase() === 'video') {
-                const hasSigns = mediaElement.hasAttribute('data-youtube-sign-src');
+                const sourceConSenas = mediaElement.querySelector('source[data-sign-src]');
+                const hasSigns = mediaElement.hasAttribute('data-youtube-sign-src') || mediaElement.hasAttribute('data-sign-src') || sourceConSenas !== null;
+                
                 if (!hasSigns && !hasTracks && perfilActivo !== 'escucha') {
                     isSimpleLayout = true;
                     document.getElementById('resizer-x').style.display = 'none';
