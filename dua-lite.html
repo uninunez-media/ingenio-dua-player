@@ -265,23 +265,43 @@
                 mediaElement.preload = "auto";
                 mediaElement.setAttribute('playsinline', '');
                 
-                const prefSena = params.get('pref_sena');
-                let signId = null;
-                let signLabelText = null;
-                
-                // 1. Identificar si hay video de señas
-                if (prefSena && params.get(`ls_${prefSena}`)) {
-                    signId = params.get(`ls_${prefSena}`);
-                    signLabelText = prefSena.toUpperCase();
-                } else {
-                    for (const [key, value] of params.entries()) {
-                        if (key.startsWith('ls_') && value) {
-                            signId = value;
-                            signLabelText = key.split('_')[1].toUpperCase();
-                            break; 
-                        }
-                    }
-                }
+               // --- REEMPLAZA DESDE "const prefSena = params.get('pref_sena');" HASTA EL FINAL DE LA CONFIGURACIÓN DE SEÑAS ---
+
+const prefSena = params.get('pref_sena');
+let signId = null;
+let signLabelText = null;
+
+if (prefSena && params.get(`ls_${prefSena}`)) {
+    signId = params.get(`ls_${prefSena}`);
+    signLabelText = prefSena.toUpperCase();
+} else {
+    for (const [key, value] of params.entries()) {
+        if (key.startsWith('ls_') && value) {
+            signId = value;
+            signLabelText = key.split('_')[1].toUpperCase();
+            break; 
+        }
+    }
+}
+
+if (signId) {
+    let cleanSignId = signId.trim();
+    // Limpieza de URL duplicada (Caso MP4MP4)
+    if (cleanSignId.includes('http') && cleanSignId.lastIndexOf('http') > 0) {
+        cleanSignId = cleanSignId.substring(0, cleanSignId.lastIndexOf('http'));
+    }
+
+    const youtubeRegex = /^[a-zA-Z0-9_-]{11}$/;
+    if (youtubeRegex.test(cleanSignId)) {
+        mediaElement.setAttribute('data-youtube-sign-src', cleanSignId);
+    } else {
+        // CONFIGURACIÓN PARA MP4 (Señas externas)
+        mediaElement.setAttribute('data-sign-src', cleanSignId);
+        mediaElement.setAttribute('data-sign-lang', 'es'); // OBLIGATORIO
+        mediaElement.setAttribute('data-sign-src-type', 'video/mp4');
+    }
+    if (signLabelText) labelOverlay.textContent = signLabelText;
+}
  
                 const cleanSignId = signId ? signId.trim() : null;
                 const isSignYouTube = cleanSignId && /^[a-zA-Z0-9_-]{11}$/.test(cleanSignId);
@@ -303,7 +323,7 @@
                         mediaElement.setAttribute('data-sign-src-type', 'video/mp4');
                          mediaElement.removeAttribute('data-able-player');
                         mediaElement.setAttribute('crossorigin', 'anonymous');  
-                        
+
                     }
                     
                     // Configuramos el label (LSE, LSC, etc.)
@@ -321,6 +341,7 @@
                         mediaElement.setAttribute('data-youtube-id', videoId);
                     } else {
                         // CASO: PRINCIPAL MP4
+                        mediaElement.src = videoId;
                         mediaElement.setAttribute('crossorigin', 'anonymous');
                         const source = document.createElement('source');
                         source.src = videoId;
